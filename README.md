@@ -1,18 +1,19 @@
-[![Code Quality](https://github.com/ChrisThompsonK/team4-job-app-frontend/actions/workflows/code-quality.yml/badge.svg)](https://github.com/ChrisThompsonK/team4-job-app-frontend/actions/workflows/code-quality.yml)
+[![Code Quality](https://github.com/ChrisThompsonK/team4-job-app-backend/actions/workflows/code-quality.yml/badge.svg)](https://github.com/ChrisThompsonK/team4-job-app-backend/actions/workflows/code-quality.yml)
 
 [![Formatted with Biome](https://img.shields.io/badge/Formatted_with-Biome-60a5fa?style=flat&logo=biome)](https://biomejs.dev/)
 
-# Team 4 Job Application Project
+# Team 4 Job Application Project - Backend
 
-A modern Node.js application built with TypeScript and Express.js using ES modules. This project includes modern development tooling with Biome for linting and formatting.
+A modern Node.js backend application built with TypeScript and Express.js using ES modules. This project includes modern development tooling with Biome for linting and formatting.
 
 ## Features
 
 - **TypeScript** - Type-safe JavaScript development
-- **Express.js** - Fast, unopinionated web framework
+- **Express.js** - Fast, unopinionated web framework for building REST APIs
 - **ES Modules** - Modern JavaScript module system
 - **Biome** - Fast linter and formatter for consistent code quality
 - **Hot Reloading** - Automatic server restart during development
+- **RESTful API** - Clean API endpoints for frontend integration
 
 ## Prerequisites
 
@@ -23,8 +24,8 @@ A modern Node.js application built with TypeScript and Express.js using ES modul
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/ChrisThompsonK/team4-job-app-frontend.git
-cd team4-job-app-frontend
+git clone https://github.com/ChrisThompsonK/team4-job-app-backend.git
+cd team4-job-app-backend
 ```
 
 2. Install dependencies:
@@ -41,6 +42,13 @@ npm run dev
 ```
 
 The server will start on `http://localhost:3000` and automatically restart when you make changes to the code.
+
+### Testing the API
+You can test the API endpoints using curl, Postman, or any HTTP client:
+```bash
+curl http://localhost:3000
+# Response: {"message":"Hello World!"}
+```
 
 ### Production Mode
 1. Build the application:
@@ -91,18 +99,21 @@ npm run start:prod    # Build and run in production mode
 
 ## API Endpoints
 
+### Current Endpoints
 - `GET /` - Returns a "Hello World" message
 
-Example:
+### Example Usage
 ```bash
 curl http://localhost:3000
 # Response: {"message":"Hello World!"}
 ```
 
+*More API endpoints will be added as the application develops.*
+
 ## Project Structure
 
 ```
-team4-job-app-frontend/
+team4-job-app-backend/
 ├── src/
 │   └── index.ts          # Main application entry point
 ├── dist/                 # Compiled JavaScript output (generated)
