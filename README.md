@@ -2,18 +2,21 @@
 
 [![Formatted with Biome](https://img.shields.io/badge/Formatted_with-Biome-60a5fa?style=flat&logo=biome)](https://biomejs.dev/)
 
-# Team 4 Job Application Project - Backend
+# Team 4 Job Application Project - Backend API
 
-A modern Node.js backend application built with TypeScript and Express.js using ES modules. This project includes modern development tooling with Biome for linting and formatting.
+A modern Node.js backend API built with TypeScript, Express.js, and Drizzle ORM. This project provides RESTful API endpoints for managing job roles in the Team 4 Job Application system.
 
 ## Features
 
 - **TypeScript** - Type-safe JavaScript development
 - **Express.js** - Fast, unopinionated web framework for building REST APIs
+- **Drizzle ORM** - Modern TypeScript-first ORM for database operations
+- **SQLite Database** - Lightweight database for job role storage
 - **ES Modules** - Modern JavaScript module system
 - **Biome** - Fast linter and formatter for consistent code quality
 - **Hot Reloading** - Automatic server restart during development
-- **RESTful API** - Clean API endpoints for frontend integration
+- **RESTful API** - Backend API endpoints serving job role data
+- **CORS Ready** - Configured for cross-origin requests from frontend clients
 
 ## Prerequisites
 
@@ -47,7 +50,10 @@ The server will start on `http://localhost:3000` and automatically restart when 
 You can test the API endpoints using curl, Postman, or any HTTP client:
 ```bash
 curl http://localhost:3000
-# Response: {"message":"Hello World!"}
+# Response: {"message":"Job Application Backend API","status":"healthy"}
+
+curl http://localhost:3000/api/jobs
+# Response: {"success":true,"data":[...],"count":3}
 ```
 
 ### Production Mode
@@ -81,6 +87,14 @@ npm run format        # Format code only
 npm run format:check  # Check formatting without applying changes
 ```
 
+#### Database Operations
+```bash
+npm run db:generate      # Generate database migrations
+npm run db:push          # Push schema changes to database
+npm run db:studio        # Open Drizzle Studio (database browser)
+npm run db:seed          # Seed database with sample data
+```
+
 #### Development
 ```bash
 npm run dev           # Start development server with hot reloading
@@ -99,34 +113,96 @@ npm run start:prod    # Build and run in production mode
 
 ## API Endpoints
 
-### Current Endpoints
-- `GET /` - Returns a "Hello World" message
+### Health Check
+- `GET /` - Returns server status and available endpoints
 
-### Example Usage
-```bash
-curl http://localhost:3000
-# Response: {"message":"Hello World!"}
+### Job Roles API
+- `GET /api/jobs` - Get all job roles
+- `GET /api/jobs/:id` - Get specific job role by ID
+- `GET /api/jobs/status/open` - Get all open job roles
+- `GET /api/jobs/status/closed` - Get all closed job roles
+
+### Job Role Data Structure
+```typescript
+interface JobRole {
+  id: number;
+  name: string;
+  location: string;
+  capability: string;
+  band: string;
+  closingDate: Date;
+  summary: string;
+  keyResponsibilities: string;
+  status: "open" | "closed";
+  numberOfOpenPositions: number;
+}
 ```
 
-*More API endpoints will be added as the application develops.*
+### Example API Response
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "id": 1,
+      "name": "Frontend Developer",
+      "location": "London, UK",
+      "capability": "Software Development",
+      "band": "Mid Level",
+      "closingDate": "2025-11-15T23:59:59.000Z",
+      "summary": "We're looking for a skilled Frontend Developer...",
+      "keyResponsibilities": "Develop responsive web applications...",
+      "status": "open",
+      "numberOfOpenPositions": 2
+    }
+  ],
+  "count": 1
+}
+```
+
+## Database
+
+This project uses **SQLite** with **Drizzle ORM** for data persistence.
+
+### Database Schema
+The main entity is the `job_roles` table with the following structure:
+- `id` - Auto-incrementing primary key
+- `name` - Job role title
+- `location` - Job location
+- `capability` - Required capability/skill area
+- `band` - Experience level (Junior, Mid, Senior)
+- `closing_date` - Application deadline
+- `summary` - Job description summary
+- `key_responsibilities` - Main responsibilities
+- `status` - Job status (open/closed)
+- `number_of_open_positions` - Available positions
+
+### Database Management
+- **View Database**: `npm run db:studio` - Opens Drizzle Studio web interface
+- **Generate Migrations**: `npm run db:generate` - Creates migration files
+- **Apply Schema**: `npm run db:push` - Applies schema to database
+- **Seed Data**: `npm run db:seed` - Populates with sample job roles
 
 ## Project Structure
 
 ```
 team4-job-app-backend/
 ├── src/
-│   └── index.ts          # Main application entry point
-├── dist/                 # Compiled JavaScript output (generated)
-├── docs/                 # Project documentation
-│   └── biome-setup.md   # Biome configuration guide
-├── node_modules/        # Dependencies (generated)
-├── .biomeignore         # Files ignored by Biome
-├── .gitignore          # Git ignore rules
-├── biome.json          # Biome configuration
-├── package.json        # Project dependencies and scripts
-├── package-lock.json   # Dependency lock file
-├── tsconfig.json       # TypeScript configuration
-└── README.md          # This file
+│   ├── db/
+│   │   ├── index.ts         # Database connection
+│   │   ├── schema.ts        # Database schema definition
+│   │   └── seed.ts          # Sample data seeding
+│   ├── routes/
+│   │   └── jobs.ts          # Job roles API endpoints
+│   └── index.ts             # Main application entry point
+├── data/
+│   └── database.sqlite      # SQLite database file
+├── drizzle/                 # Database migrations
+├── dist/                    # Compiled JavaScript output
+├── drizzle.config.ts        # Drizzle ORM configuration
+├── package.json             # Project dependencies and scripts
+├── tsconfig.json            # TypeScript configuration
+└── README.md                # This file
 ```
 
 ## Development Workflow
@@ -140,11 +216,13 @@ team4-job-app-backend/
 ## Technology Stack
 
 - **Runtime**: Node.js
-- **Language**: TypeScript
-- **Framework**: Express.js
+- **Language**: TypeScript  
+- **Framework**: Express.js (RESTful API)
+- **Database**: SQLite with Drizzle ORM
 - **Module System**: ES Modules
 - **Code Quality**: Biome (linting + formatting)
 - **Development**: tsx (TypeScript execution with hot reloading)
+- **Testing**: Vitest
 
 ## Contributing
 
@@ -183,7 +261,11 @@ This will provide real-time linting and formatting as you type.
 | `npm run build` | Compile TypeScript to JavaScript |
 | `npm start` | Run the compiled application |
 | `npm run start:prod` | Build and run in production mode |
-| `npm test` | Run tests (placeholder) |
+| `npm test` | Run unit tests with Vitest |
+| `npm run db:generate` | Generate database migrations |
+| `npm run db:push` | Push schema changes to database |
+| `npm run db:studio` | Open Drizzle Studio (database browser) |
+| `npm run db:seed` | Seed database with sample data |
 | `npm run check` | Check for linting and formatting issues |
 | `npm run lint` | Same as check |
 | `npm run lint:fix` | Fix linting and formatting issues automatically |
