@@ -44,15 +44,15 @@ Start the application in development mode with hot reloading:
 npm run dev
 ```
 
-The server will start on `http://localhost:3000` and automatically restart when you make changes to the code.
+The server will start on `http://localhost:3001` and automatically restart when you make changes to the code.
 
 ### Testing the API
 You can test the API endpoints using curl, Postman, or any HTTP client:
 ```bash
-curl http://localhost:3000
+curl http://localhost:3001
 # Response: {"message":"Job Application Backend API","status":"healthy"}
 
-curl http://localhost:3000/api/jobs
+curl http://localhost:3001/api/jobs
 # Response: {"success":true,"data":[...],"count":3}
 ```
 
