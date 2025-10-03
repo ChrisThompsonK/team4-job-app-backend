@@ -1,7 +1,7 @@
-import { Router } from "express";
 import { eq } from "drizzle-orm";
+import { Router } from "express";
 import { db } from "../db/index.js";
-import { jobRoles, type JobRole } from "../db/schema.js";
+import { jobRoles } from "../db/schema.js";
 
 const router = Router();
 
@@ -36,7 +36,7 @@ router.get("/:id", async (req, res): Promise<void> => {
     const { id } = req.params;
     const jobId = parseInt(id, 10);
 
-    if (isNaN(jobId)) {
+    if (Number.isNaN(jobId)) {
       res.status(400).json({
         success: false,
         error: "Invalid job ID",
@@ -55,7 +55,7 @@ router.get("/:id", async (req, res): Promise<void> => {
     }
 
     // Convert closingDate string to Date object for frontend
-    const foundJob = job[0]!; // Non-null assertion since we checked length above
+    const foundJob = job[0] as NonNullable<(typeof job)[0]>; // Safe since we checked length above
     const formattedJob = {
       ...foundJob,
       closingDate: new Date(foundJob.closingDate),
