@@ -6,14 +6,7 @@
       "idx": 0,
       "version": "6",
       "when": 1759415239006,
-      "tag": "0000_tranquil_hardball",
-      "breakpoints": true
-    },
-    {
-      "idx": 1,
-      "version": "6",
-      "when": 1759417298953,
-      "tag": "0001_clear_adam_destine",
+      "tag": "jobrolemigration.sql",
       "breakpoints": true
     }
   ]
