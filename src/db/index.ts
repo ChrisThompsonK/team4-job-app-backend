@@ -1,7 +1,7 @@
+import { mkdirSync } from "node:fs";
+import { dirname } from "node:path";
 import Database from "better-sqlite3";
 import { drizzle } from "drizzle-orm/better-sqlite3";
-import { mkdirSync } from "fs";
-import { dirname } from "path";
 import * as schema from "./schema.js";
 
 // Create database file path
