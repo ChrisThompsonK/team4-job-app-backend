@@ -36,6 +36,14 @@ cd team4-job-app-backend
 npm install
 ```
 
+3. **Initial Setup - Seed the Database**:
+⚠️ **Important**: Before running the application for the first time, you must seed the database with sample data:
+```bash
+npm run db:seed
+```
+
+This command populates the database with sample job roles. Without this step, the API will return empty results.
+
 ## Running the Application
 
 ### Development Mode
@@ -163,6 +171,14 @@ interface JobRole {
 ## Database
 
 This project uses **SQLite** with **Drizzle ORM** for data persistence.
+
+### First-Time Setup
+🚨 **Required**: After installation, you must seed the database before using the application:
+```bash
+npm run db:seed
+```
+
+This populates the database with sample job roles. The application will create the database tables automatically, but it starts with no data.
 
 ### Database Schema
 The main entity is the `job_roles` table with the following structure:
