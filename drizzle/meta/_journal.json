@@ -1,0 +1,13 @@
+{
+  "version": "7",
+  "dialect": "sqlite",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "6",
+      "when": 1759415239006,
+      "tag": "0000_job_role_create_table_migration.sql",
+      "breakpoints": true
+    }
+  ]
+}

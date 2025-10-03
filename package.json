@@ -1,7 +1,7 @@
 {
-  "name": "team4-job-app-frontend",
+  "name": "team4-job-app-backend",
   "version": "1.0.0",
-  "description": "",
+  "description": "Backend API for Team 4 Job Application Project",
   "type": "module",
   "main": "dist/index.js",
   "scripts": {
@@ -16,20 +16,32 @@
     "lint:fix": "biome check --write .",
     "format": "biome format --write .",
     "format:check": "biome format .",
-    "check": "biome check ."
+    "check": "biome check .",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "drizzle-kit migrate",
+    "db:push": "drizzle-kit push",
+    "db:studio": "drizzle-kit studio",
+    "db:seed": "tsx src/db/seed.ts"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "devDependencies": {
     "@biomejs/biome": "2.2.4",
+    "@types/better-sqlite3": "^7.6.13",
     "@types/express": "^5.0.3",
     "@types/node": "^24.6.0",
+    "@types/supertest": "^6.0.3",
+    "drizzle-kit": "^0.31.5",
+    "supertest": "^7.1.4",
     "tsx": "^4.20.6",
     "typescript": "^5.9.2",
     "vitest": "^3.2.4"
   },
   "dependencies": {
+    "@libsql/client": "^0.15.15",
+    "better-sqlite3": "^12.4.1",
+    "drizzle-orm": "^0.44.6",
     "express": "^5.1.0"
   }
 }

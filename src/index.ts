@@ -1,17 +1,34 @@
 import express from "express";
+import jobsRouter from "./routes/jobs.js";
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 3001;
 
 // Middleware to parse JSON
 app.use(express.json());
 
-// Hello World endpoint
-app.get("/", (_req, res) => {
-  res.json({ message: "Hello World!" });
+// CORS middleware for frontend integration
+app.use((_req, res, next) => {
+  res.header("Access-Control-Allow-Origin", "*");
+  res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
+  next();
 });
 
-// Start the server
+// Routes
+app.use("/api/jobs", jobsRouter);
+
+// Health check endpoint
+app.get("/", (_req, res) => {
+  res.json({
+    message: "Job Application Backend API",
+    status: "healthy",
+    endpoints: {
+      jobs: "/api/jobs",
+      jobById: "/api/jobs/:id",
+      jobsByStatus: "/api/jobs/status/:status",
+    },
+  });
+}); // Start the server
 const main = async (): Promise<void> => {
   try {
     app.listen(PORT, () => {
