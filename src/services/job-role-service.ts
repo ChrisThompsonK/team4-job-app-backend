@@ -16,8 +16,8 @@ interface CreateJobRoleInput {
 export class JobRoleService {
   private repository: JobRoleRepository;
 
-  constructor() {
-    this.repository = new JobRoleRepository();
+  constructor(repository?: JobRoleRepository) {
+    this.repository = repository || new JobRoleRepository();
   }
 
   async getAllJobRoles() {

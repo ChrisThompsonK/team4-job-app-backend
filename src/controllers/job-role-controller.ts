@@ -4,8 +4,8 @@ import { JobRoleService } from "../services/job-role-service.js";
 export class JobRoleController {
   private service: JobRoleService;
 
-  constructor() {
-    this.service = new JobRoleService();
+  constructor(service?: JobRoleService) {
+    this.service = service || new JobRoleService();
   }
 
   getAllJobRoles = async (_req: Request, res: Response): Promise<void> => {
