@@ -1,5 +1,6 @@
 import type { NewJobRole } from "../db/schema.js";
 import { JobRoleRepository } from "../repositories/job-role-repository.js";
+import { JobRoleValidator } from "../validators/job-role-validator.js";
 
 interface CreateJobRoleInput {
   name: string;
@@ -15,9 +16,11 @@ interface CreateJobRoleInput {
 
 export class JobRoleService {
   private repository: JobRoleRepository;
+  private validator: JobRoleValidator;
 
-  constructor(repository?: JobRoleRepository) {
+  constructor(repository?: JobRoleRepository, validator?: JobRoleValidator) {
     this.repository = repository || new JobRoleRepository();
+    this.validator = validator || new JobRoleValidator();
   }
 
   async getAllJobRoles() {
@@ -54,44 +57,18 @@ export class JobRoleService {
   }
 
   async createJobRole(input: CreateJobRoleInput) {
-    // Validate required fields
-    if (
-      !input.name ||
-      !input.location ||
-      !input.capability ||
-      !input.band ||
-      !input.closingDate ||
-      !input.summary ||
-      !input.keyResponsibilities
-    ) {
-      throw new Error(
-        "Missing required fields. Required: name, location, capability, band, closingDate, summary, keyResponsibilities"
-      );
+    // Validate input
+    const validationResult = this.validator.validateCreateJobRole(input);
+
+    if (!validationResult.isValid) {
+      throw new Error(validationResult.error);
     }
 
-    // Validate status
-    const jobStatus = input.status || "open";
-    if (jobStatus !== "open" && jobStatus !== "closed") {
-      throw new Error("Invalid status. Must be 'open' or 'closed'");
+    if (!validationResult.value) {
+      throw new Error("Validation passed but no value returned");
     }
 
-    // Validate numberOfOpenPositions
-    const positions = input.numberOfOpenPositions || 1;
-    if (typeof positions !== "number" || positions < 0) {
-      throw new Error("numberOfOpenPositions must be a non-negative number");
-    }
-
-    // Validate and format closing date
-    let formattedClosingDate: string;
-    try {
-      const date = new Date(input.closingDate);
-      if (Number.isNaN(date.getTime())) {
-        throw new Error("Invalid date");
-      }
-      formattedClosingDate = date.toISOString();
-    } catch (_error) {
-      throw new Error("Invalid closingDate. Must be a valid date string");
-    }
+    const { status, numberOfOpenPositions, formattedClosingDate } = validationResult.value;
 
     // Create new job role
     const newJob: NewJobRole = {
@@ -102,8 +79,8 @@ export class JobRoleService {
       closingDate: formattedClosingDate,
       summary: input.summary,
       keyResponsibilities: input.keyResponsibilities,
-      status: jobStatus,
-      numberOfOpenPositions: positions,
+      status,
+      numberOfOpenPositions,
     };
 
     const createdJob = await this.repository.create(newJob);
