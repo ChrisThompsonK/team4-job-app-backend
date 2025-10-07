@@ -1,8 +1,8 @@
 import { eq } from "drizzle-orm";
 import { Router } from "express";
 import { db } from "../db/index.js";
-import { jobRoles } from "../db/schema.js";
 import type { NewJobRole } from "../db/schema.js";
+import { jobRoles } from "../db/schema.js";
 
 const router = Router();
 
@@ -130,10 +130,19 @@ router.post("/", async (req, res): Promise<void> => {
     } = req.body;
 
     // Validation
-    if (!name || !location || !capability || !band || !closingDate || !summary || !keyResponsibilities) {
+    if (
+      !name ||
+      !location ||
+      !capability ||
+      !band ||
+      !closingDate ||
+      !summary ||
+      !keyResponsibilities
+    ) {
       res.status(400).json({
         success: false,
-        error: "Missing required fields. Required: name, location, capability, band, closingDate, summary, keyResponsibilities",
+        error:
+          "Missing required fields. Required: name, location, capability, band, closingDate, summary, keyResponsibilities",
       });
       return;
     }
@@ -166,7 +175,7 @@ router.post("/", async (req, res): Promise<void> => {
         throw new Error("Invalid date");
       }
       formattedClosingDate = date.toISOString();
-    } catch (error) {
+    } catch (_error) {
       res.status(400).json({
         success: false,
         error: "Invalid closingDate. Must be a valid date string",
