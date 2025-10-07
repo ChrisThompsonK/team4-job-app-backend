@@ -125,12 +125,20 @@ export class JobRoleValidator {
       return closingDateResult;
     }
 
+    // At this point, all validations passed and values are guaranteed to exist
+    if (!statusResult.value || !positionsResult.value || !closingDateResult.value) {
+      return {
+        isValid: false,
+        error: "Validation passed but values are missing",
+      };
+    }
+
     return {
       isValid: true,
       value: {
-        status: statusResult.value?.status,
-        numberOfOpenPositions: positionsResult.value?.numberOfOpenPositions,
-        formattedClosingDate: closingDateResult.value?.formattedClosingDate,
+        status: statusResult.value.status,
+        numberOfOpenPositions: positionsResult.value.numberOfOpenPositions,
+        formattedClosingDate: closingDateResult.value.formattedClosingDate,
       },
     };
   }
