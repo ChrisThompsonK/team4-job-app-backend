@@ -17,6 +17,10 @@ build/
 .env.production.local
 
 # Runtime data
+data/
+*.sqlite
+*.sqlite3
+*.db
 pids
 *.pid
 *.seed
