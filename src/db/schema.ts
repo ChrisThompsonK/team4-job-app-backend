@@ -15,3 +15,16 @@ export const jobRoles = sqliteTable("job_roles", {
 
 export type JobRole = typeof jobRoles.$inferSelect;
 export type NewJobRole = typeof jobRoles.$inferInsert;
+
+export const applications = sqliteTable("applications", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  jobRoleId: integer("job_role_id")
+    .notNull()
+    .references(() => jobRoles.id),
+  cvText: text("cv_text").notNull(),
+  status: text("status").notNull().default("in progress"), // "in progress" | "reviewed" | "accepted" | "rejected"
+  createdAt: text("created_at").notNull(), // stored as ISO string
+});
+
+export type Application = typeof applications.$inferSelect;
+export type NewApplication = typeof applications.$inferInsert;

@@ -1,4 +1,5 @@
 import express from "express";
+import applicationsRouter from "./routes/applications.js";
 import jobsRouter from "./routes/jobs.js";
 
 const app = express();
@@ -17,6 +18,7 @@ app.use((_req, res, next) => {
 
 // Routes
 app.use("/api/jobs", jobsRouter);
+app.use("/api/applications", applicationsRouter);
 
 // Health check endpoint
 app.get("/", (_req, res) => {
@@ -28,6 +30,10 @@ app.get("/", (_req, res) => {
       jobById: "/api/jobs/:id",
       jobsByStatus: "/api/jobs/status/:status",
       createJob: "POST /api/jobs",
+      applications: "/api/applications",
+      createApplication: "POST /api/applications",
+      applicationById: "/api/applications/:id",
+      applicationsByJobRole: "/api/applications/job/:jobRoleId",
     },
   });
 }); // Start the server

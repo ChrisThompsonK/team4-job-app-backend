@@ -20,7 +20,6 @@ export class JobRoleController {
     } catch (error) {
       console.error("Error fetching jobs:", error);
       res.status(500).json({
-        success: false,
         error: "Failed to fetch job roles",
       });
     }
@@ -32,7 +31,6 @@ export class JobRoleController {
 
       if (!id) {
         res.status(400).json({
-          success: false,
           error: "Job ID is required",
         });
         return;
@@ -42,7 +40,6 @@ export class JobRoleController {
 
       if (Number.isNaN(jobId)) {
         res.status(400).json({
-          success: false,
           error: "Invalid job ID",
         });
         return;
@@ -52,16 +49,12 @@ export class JobRoleController {
 
       if (!job) {
         res.status(404).json({
-          success: false,
           error: "Job not found",
         });
         return;
       }
 
-      res.json({
-        success: true,
-        data: job,
-      });
+      res.json(job);
     } catch (error) {
       console.error("Error fetching job:", error);
       res.status(500).json({
@@ -77,7 +70,6 @@ export class JobRoleController {
 
       if (status !== "open" && status !== "closed") {
         res.status(400).json({
-          success: false,
           error: "Invalid status. Must be 'open' or 'closed'",
         });
         return;
@@ -94,7 +86,6 @@ export class JobRoleController {
     } catch (error) {
       console.error("Error filtering jobs:", error);
       res.status(500).json({
-        success: false,
         error: "Failed to filter job roles",
       });
     }
@@ -105,7 +96,6 @@ export class JobRoleController {
       const jobRole = await this.service.createJobRole(req.body);
 
       res.status(201).json({
-        success: true,
         message: "Job role created successfully",
         data: jobRole,
       });
@@ -124,7 +114,6 @@ export class JobRoleController {
           errorMessage.includes("Invalid closingDate")
         ) {
           res.status(400).json({
-            success: false,
             error: errorMessage,
           });
           return;
@@ -132,7 +121,6 @@ export class JobRoleController {
       }
 
       res.status(500).json({
-        success: false,
         error: "Failed to create job role",
       });
     }
