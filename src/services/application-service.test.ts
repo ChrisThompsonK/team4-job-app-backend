@@ -5,6 +5,11 @@ import type { JobRoleRepository } from "../repositories/job-role-repository";
 import type { ApplicationValidator } from "../validators/application-validator";
 import { ApplicationService } from "./application-service";
 
+// Mock the database module to prevent actual database connections
+vi.mock("../db/index.js", () => ({
+  db: {},
+}));
+
 describe("ApplicationService", () => {
   let mockApplicationRepository: {
     create: ReturnType<typeof vi.fn>;
