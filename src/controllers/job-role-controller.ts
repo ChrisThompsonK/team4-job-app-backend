@@ -55,7 +55,7 @@ export class JobRoleController {
       }
 
       res.json(job,);
-            } catch (error) {
+      } catch (error) {
       console.error("Error fetching job:", error);
       res.status(500).json({
         success: false,
