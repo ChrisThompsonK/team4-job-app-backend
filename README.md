@@ -6,6 +6,19 @@
 
 A modern Node.js backend API built with TypeScript, Express.js, and Drizzle ORM. This project provides RESTful API endpoints for managing job roles in the Team 4 Job Application system.
 
+⚠️ **Important**: This backend API is required for the frontend application to function. The frontend (`team4-job-app-frontend`) consumes data from this API.
+
+## 📖 Documentation
+
+For comprehensive guides on working with this backend API, see the **[`instructions/` directory](./instructions/)**:
+
+- **[Project Info](./instructions/project-info.md)** - Complete architecture overview, layered pattern, database schema
+- **[Drizzle ORM](./instructions/drizzle-orm-instructions.md)** - Database operations, queries, migrations, seeding
+- **[Linting](./instructions/linting-instructions.md)** - Biome setup, code style, AI/Copilot workflow
+- **[Dependencies](./instructions/dependencies-instructions.md)** - npm package management, updates, security
+
+**For LLMs/AI Assistants**: Read [`instructions/README.md`](./instructions/README.md) for guidance on using these documentation files.
+
 ## Features
 
 - **TypeScript** - Type-safe JavaScript development
@@ -37,12 +50,36 @@ npm install
 ```
 
 3. **Initial Setup - Seed the Database**:
+
 ⚠️ **Important**: Before running the application for the first time, you must seed the database with sample data:
 ```bash
 npm run db:seed
 ```
 
 This command populates the database with sample job roles. Without this step, the API will return empty results.
+
+## Quick Start (Backend + Frontend Together)
+
+To run both the backend API and frontend application:
+
+### Terminal 1 - Backend API (This Project)
+```bash
+cd team4-job-app-backend
+npm install              # First time only
+npm run db:seed          # First time only - seed database
+npm run dev              # Starts on http://localhost:3001
+```
+
+### Terminal 2 - Frontend Application
+```bash
+cd team4-job-app-frontend
+npm install              # First time only
+npm run dev              # Starts on http://localhost:3000
+```
+
+Then open http://localhost:3000 in your browser.
+
+⚠️ **The frontend cannot function without this backend API running** - it will fail to load job data.
 
 ## Running the Application
 
@@ -84,6 +121,10 @@ npm run start:prod
 
 This project uses **Biome** for maintaining code quality and consistent formatting.
 
+See **[`instructions/linting-instructions.md`](./instructions/linting-instructions.md)** for detailed linting setup and best practices.
+
+🚨 **CRITICAL**: If using GitHub Copilot or AI code generation tools, **always run `npm run lint:fix` immediately after** accepting AI-generated code.
+
 ### Available Commands
 
 #### Linting & Formatting
@@ -120,6 +161,10 @@ npm run start:prod    # Build and run in production mode
 - **Trailing Commas**: ES5 style
 
 ## API Endpoints
+
+This backend provides RESTful API endpoints consumed by the frontend application.
+
+See **[`instructions/project-info.md`](./instructions/project-info.md)** for complete API documentation and architecture details.
 
 ### Health Check
 - `GET /` - Returns server status and available endpoints
@@ -172,6 +217,8 @@ interface JobRole {
 
 This project uses **SQLite** with **Drizzle ORM** for data persistence.
 
+See **[`instructions/drizzle-orm-instructions.md`](./instructions/drizzle-orm-instructions.md)** for comprehensive database operations guide.
+
 ### First-Time Setup
 🚨 **Required**: After installation, you must seed the database before using the application:
 ```bash
@@ -203,23 +250,31 @@ The main entity is the `job_roles` table with the following structure:
 
 ```
 team4-job-app-backend/
+├── instructions/            # 📖 Comprehensive documentation (READ FIRST)
+│   ├── README.md           # Documentation navigation guide
+│   ├── project-info.md     # Architecture & technology overview
+│   ├── drizzle-orm-instructions.md  # Database operations guide
+│   ├── linting-instructions.md      # Code quality & AI workflow
+│   └── dependencies-instructions.md # Package management
 ├── src/
 │   ├── db/
-│   │   ├── index.ts         # Database connection
-│   │   ├── schema.ts        # Database schema definition
-│   │   └── seed.ts          # Sample data seeding
+│   │   ├── index.ts        # Database connection
+│   │   ├── schema.ts       # Database schema definition
+│   │   └── seed.ts         # Sample data seeding
 │   ├── routes/
-│   │   └── jobs.ts          # Job roles API endpoints
-│   └── index.ts             # Main application entry point
+│   │   └── jobs.ts         # Job roles API endpoints
+│   └── index.ts            # Main application entry point
 ├── data/
-│   └── database.sqlite      # SQLite database file
-├── drizzle/                 # Database migrations
-├── dist/                    # Compiled JavaScript output
-├── drizzle.config.ts        # Drizzle ORM configuration
-├── package.json             # Project dependencies and scripts
-├── tsconfig.json            # TypeScript configuration
-└── README.md                # This file
+│   └── database.sqlite     # SQLite database file
+├── drizzle/                # Database migrations
+├── dist/                   # Compiled JavaScript output
+├── drizzle.config.ts       # Drizzle ORM configuration
+├── package.json            # Project dependencies and scripts
+├── tsconfig.json           # TypeScript configuration
+└── README.md               # This file
 ```
+
+📖 **New to this project?** Start by reading [`instructions/README.md`](./instructions/README.md)
 
 ## Development Workflow
 
@@ -231,14 +286,37 @@ team4-job-app-backend/
 
 ## Technology Stack
 
-- **Runtime**: Node.js
-- **Language**: TypeScript  
-- **Framework**: Express.js (RESTful API)
-- **Database**: SQLite with Drizzle ORM
+- **Runtime**: Node.js (v18+, latest LTS: v20+)
+- **Language**: TypeScript (v5.9+)
+- **Framework**: Express.js v5.1.0 (RESTful API)
+- **Database**: SQLite with Drizzle ORM v0.44.6
 - **Module System**: ES Modules
-- **Code Quality**: Biome (linting + formatting)
-- **Development**: tsx (TypeScript execution with hot reloading)
-- **Testing**: Vitest
+- **Code Quality**: Biome v2.2.4 (linting + formatting)
+- **Development**: tsx v4.20.6 (TypeScript execution with hot reloading)
+- **Testing**: Vitest v3.2.4
+
+📖 See [`instructions/project-info.md`](./instructions/project-info.md) for detailed technology stack information.  
+📦 See [`instructions/dependencies-instructions.md`](./instructions/dependencies-instructions.md) for package management.
+
+## Frontend Integration
+
+This backend API serves data to the frontend application located in `team4-job-app-frontend/`.
+
+### Connection Details
+- **API Base URL**: `http://localhost:3001` (development)
+- **CORS**: Configured to accept requests from `http://localhost:3000` (frontend)
+- **Data Format**: JSON responses with `{success, data, count}` structure
+
+### What the Frontend Needs
+⚠️ **Critical**: The frontend application **cannot function without this backend running**. 
+
+**Without this backend API, the frontend will**:
+- ❌ Fail to load the jobs list page (empty/error state)
+- ❌ Fail to display individual job details
+- ❌ Show "Failed to load jobs" error messages
+- ❌ Be unable to submit job applications
+
+**To run both projects together**, see the "Quick Start (Backend + Frontend Together)" section above.
 
 ## Contributing
 
