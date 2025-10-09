@@ -13,4 +13,10 @@ router.get("/:id", controller.getApplicationById);
 // GET /api/applications/job/:jobRoleId - Get all applications for a job role
 router.get("/job/:jobRoleId", controller.getApplicationsByJobRole);
 
+// PUT /api/applications/:id/hire - Hire an applicant
+router.put("/:id/hire", controller.hireApplicant);
+
+// PUT /api/applications/:id/reject - Reject an applicant
+router.put("/:id/reject", controller.rejectApplicant);
+
 export default router;

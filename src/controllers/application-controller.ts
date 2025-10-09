@@ -1,4 +1,5 @@
 import type { Request, Response } from "express";
+import { handleError } from "../errors/custom-errors.js";
 import { ApplicationService } from "../services/application-service.js";
 
 export class ApplicationController {
@@ -14,7 +15,6 @@ export class ApplicationController {
 
       if (!jobRoleId || !cvText) {
         res.status(400).json({
-          success: false,
           error: "Job role ID and CV text are required",
         });
         return;
@@ -26,24 +26,11 @@ export class ApplicationController {
       });
 
       res.status(201).json({
-        success: true,
         data: application,
         message: "Application submitted successfully",
       });
     } catch (error) {
-      console.error("Error creating application:", error);
-
-      if (error instanceof Error) {
-        res.status(400).json({
-          success: false,
-          error: error.message,
-        });
-      } else {
-        res.status(500).json({
-          success: false,
-          error: "Failed to create application",
-        });
-      }
+      handleError(error, res, "Failed to create application");
     }
   };
 
@@ -53,7 +40,6 @@ export class ApplicationController {
 
       if (!id) {
         res.status(400).json({
-          success: false,
           error: "Application ID is required",
         });
         return;
@@ -63,7 +49,6 @@ export class ApplicationController {
 
       if (Number.isNaN(applicationId)) {
         res.status(400).json({
-          success: false,
           error: "Invalid application ID",
         });
         return;
@@ -73,22 +58,16 @@ export class ApplicationController {
 
       if (!application) {
         res.status(404).json({
-          success: false,
           error: "Application not found",
         });
         return;
       }
 
       res.json({
-        success: true,
         data: application,
       });
     } catch (error) {
-      console.error("Error fetching application:", error);
-      res.status(500).json({
-        success: false,
-        error: "Failed to fetch application",
-      });
+      handleError(error, res, "Failed to fetch application");
     }
   };
 
@@ -98,7 +77,6 @@ export class ApplicationController {
 
       if (!jobRoleId) {
         res.status(400).json({
-          success: false,
           error: "Job role ID is required",
         });
         return;
@@ -108,7 +86,6 @@ export class ApplicationController {
 
       if (Number.isNaN(id)) {
         res.status(400).json({
-          success: false,
           error: "Invalid job role ID",
         });
         return;
@@ -117,16 +94,73 @@ export class ApplicationController {
       const applications = await this.service.getApplicationsByJobRole(id);
 
       res.json({
-        success: true,
         data: applications,
         count: applications.length,
       });
     } catch (error) {
-      console.error("Error fetching applications:", error);
-      res.status(500).json({
-        success: false,
-        error: "Failed to fetch applications",
+      handleError(error, res, "Failed to fetch applications");
+    }
+  };
+
+  hireApplicant = async (req: Request, res: Response): Promise<void> => {
+    try {
+      const { id } = req.params;
+
+      if (!id) {
+        res.status(400).json({
+          error: "Application ID is required",
+        });
+        return;
+      }
+
+      const applicationId = Number.parseInt(id, 10);
+
+      if (Number.isNaN(applicationId) || applicationId <= 0) {
+        res.status(400).json({
+          error: "Invalid application ID",
+        });
+        return;
+      }
+
+      const result = await this.service.hireApplicant(applicationId);
+
+      res.json({
+        message: "Application hired successfully",
+        data: result,
       });
+    } catch (error) {
+      handleError(error, res, "Failed to hire applicant");
+    }
+  };
+
+  rejectApplicant = async (req: Request, res: Response): Promise<void> => {
+    try {
+      const { id } = req.params;
+
+      if (!id) {
+        res.status(400).json({
+          error: "Application ID is required",
+        });
+        return;
+      }
+
+      const applicationId = Number.parseInt(id, 10);
+
+      if (Number.isNaN(applicationId) || applicationId <= 0) {
+        res.status(400).json({
+          error: "Invalid application ID",
+        });
+        return;
+      }
+
+      const result = await this.service.rejectApplicant(applicationId);
+
+      res.json({
+        message: "Application rejected",
+        data: result,
+      });
+    } catch (error) {
+      handleError(error, res, "Failed to reject applicant");
     }
   };
 }

@@ -34,6 +34,8 @@ app.get("/", (_req, res) => {
       createApplication: "POST /api/applications",
       applicationById: "/api/applications/:id",
       applicationsByJobRole: "/api/applications/job/:jobRoleId",
+      hireApplicant: "PUT /api/applications/:id/hire",
+      rejectApplicant: "PUT /api/applications/:id/reject",
     },
   });
 }); // Start the server
