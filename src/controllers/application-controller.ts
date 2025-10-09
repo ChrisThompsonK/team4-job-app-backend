@@ -1,4 +1,5 @@
 import type { Request, Response } from "express";
+import { BusinessLogicError, NotFoundError, ValidationError } from "../errors/custom-errors.js";
 import { ApplicationService } from "../services/application-service.js";
 
 export class ApplicationController {
@@ -31,7 +32,15 @@ export class ApplicationController {
     } catch (error) {
       console.error("Error creating application:", error);
 
-      if (error instanceof Error) {
+      if (error instanceof ValidationError) {
+        res.status(400).json({
+          error: error.message,
+        });
+      } else if (error instanceof NotFoundError) {
+        res.status(404).json({
+          error: error.message,
+        });
+      } else if (error instanceof BusinessLogicError) {
         res.status(400).json({
           error: error.message,
         });
@@ -146,24 +155,18 @@ export class ApplicationController {
     } catch (error) {
       console.error("Error hiring applicant:", error);
 
-      if (error instanceof Error) {
-        // Check for specific error messages
-        if (error.message.includes("not found")) {
-          res.status(404).json({
-            error: error.message,
-          });
-        } else if (
-          error.message.includes("Cannot change status") ||
-          error.message.includes("No open positions")
-        ) {
-          res.status(400).json({
-            error: error.message,
-          });
-        } else {
-          res.status(500).json({
-            error: error.message,
-          });
-        }
+      if (error instanceof ValidationError) {
+        res.status(400).json({
+          error: error.message,
+        });
+      } else if (error instanceof NotFoundError) {
+        res.status(404).json({
+          error: error.message,
+        });
+      } else if (error instanceof BusinessLogicError) {
+        res.status(400).json({
+          error: error.message,
+        });
       } else {
         res.status(500).json({
           error: "Failed to hire applicant",
@@ -201,21 +204,18 @@ export class ApplicationController {
     } catch (error) {
       console.error("Error rejecting applicant:", error);
 
-      if (error instanceof Error) {
-        // Check for specific error messages
-        if (error.message.includes("not found")) {
-          res.status(404).json({
-            error: error.message,
-          });
-        } else if (error.message.includes("Cannot change status")) {
-          res.status(400).json({
-            error: error.message,
-          });
-        } else {
-          res.status(500).json({
-            error: error.message,
-          });
-        }
+      if (error instanceof ValidationError) {
+        res.status(400).json({
+          error: error.message,
+        });
+      } else if (error instanceof NotFoundError) {
+        res.status(404).json({
+          error: error.message,
+        });
+      } else if (error instanceof BusinessLogicError) {
+        res.status(400).json({
+          error: error.message,
+        });
       } else {
         res.status(500).json({
           error: "Failed to reject applicant",
