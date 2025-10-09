@@ -1,4 +1,5 @@
 import type { NewJobRole } from "../db/schema.js";
+import { ValidationError } from "../errors/custom-errors.js";
 import { JobRoleRepository } from "../repositories/job-role-repository.js";
 import { JobRoleValidator } from "../validators/job-role-validator.js";
 
@@ -61,11 +62,11 @@ export class JobRoleService {
     const validationResult = this.validator.validateCreateJobRole(input);
 
     if (!validationResult.isValid) {
-      throw new Error(validationResult.error);
+      throw new ValidationError(validationResult.error || "Validation failed");
     }
 
     if (!validationResult.value) {
-      throw new Error("Validation passed but no value returned");
+      throw new ValidationError("Validation passed but no value returned");
     }
 
     const { status, numberOfOpenPositions, formattedClosingDate } = validationResult.value;

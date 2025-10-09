@@ -1,4 +1,5 @@
 import type { Request, Response } from "express";
+import { handleError } from "../errors/custom-errors.js";
 import { JobRoleService } from "../services/job-role-service.js";
 
 export class JobRoleController {
@@ -18,10 +19,7 @@ export class JobRoleController {
         count: jobs.length,
       });
     } catch (error) {
-      console.error("Error fetching jobs:", error);
-      res.status(500).json({
-        error: "Failed to fetch job roles",
-      });
+      handleError(error, res, "Failed to fetch job roles");
     }
   };
 
@@ -56,11 +54,7 @@ export class JobRoleController {
 
       res.json(job);
     } catch (error) {
-      console.error("Error fetching job:", error);
-      res.status(500).json({
-        success: false,
-        error: "Failed to fetch job role",
-      });
+      handleError(error, res, "Failed to fetch job role");
     }
   };
 
@@ -84,10 +78,7 @@ export class JobRoleController {
         filter: status,
       });
     } catch (error) {
-      console.error("Error filtering jobs:", error);
-      res.status(500).json({
-        error: "Failed to filter job roles",
-      });
+      handleError(error, res, "Failed to filter job roles");
     }
   };
 
@@ -100,29 +91,7 @@ export class JobRoleController {
         data: jobRole,
       });
     } catch (error) {
-      console.error("Error creating job:", error);
-
-      // Handle validation errors
-      if (error instanceof Error) {
-        const errorMessage = error.message;
-
-        // Check if it's a validation error
-        if (
-          errorMessage.includes("Missing required fields") ||
-          errorMessage.includes("Invalid status") ||
-          errorMessage.includes("numberOfOpenPositions") ||
-          errorMessage.includes("Invalid closingDate")
-        ) {
-          res.status(400).json({
-            error: errorMessage,
-          });
-          return;
-        }
-      }
-
-      res.status(500).json({
-        error: "Failed to create job role",
-      });
+      handleError(error, res, "Failed to create job role");
     }
   };
 }

@@ -1,5 +1,5 @@
 import type { Request, Response } from "express";
-import { BusinessLogicError, NotFoundError, ValidationError } from "../errors/custom-errors.js";
+import { handleError } from "../errors/custom-errors.js";
 import { ApplicationService } from "../services/application-service.js";
 
 export class ApplicationController {
@@ -30,25 +30,7 @@ export class ApplicationController {
         message: "Application submitted successfully",
       });
     } catch (error) {
-      console.error("Error creating application:", error);
-
-      if (error instanceof ValidationError) {
-        res.status(400).json({
-          error: error.message,
-        });
-      } else if (error instanceof NotFoundError) {
-        res.status(404).json({
-          error: error.message,
-        });
-      } else if (error instanceof BusinessLogicError) {
-        res.status(400).json({
-          error: error.message,
-        });
-      } else {
-        res.status(500).json({
-          error: "Failed to create application",
-        });
-      }
+      handleError(error, res, "Failed to create application");
     }
   };
 
@@ -85,10 +67,7 @@ export class ApplicationController {
         data: application,
       });
     } catch (error) {
-      console.error("Error fetching application:", error);
-      res.status(500).json({
-        error: "Failed to fetch application",
-      });
+      handleError(error, res, "Failed to fetch application");
     }
   };
 
@@ -119,10 +98,7 @@ export class ApplicationController {
         count: applications.length,
       });
     } catch (error) {
-      console.error("Error fetching applications:", error);
-      res.status(500).json({
-        error: "Failed to fetch applications",
-      });
+      handleError(error, res, "Failed to fetch applications");
     }
   };
 
@@ -153,25 +129,7 @@ export class ApplicationController {
         data: result,
       });
     } catch (error) {
-      console.error("Error hiring applicant:", error);
-
-      if (error instanceof ValidationError) {
-        res.status(400).json({
-          error: error.message,
-        });
-      } else if (error instanceof NotFoundError) {
-        res.status(404).json({
-          error: error.message,
-        });
-      } else if (error instanceof BusinessLogicError) {
-        res.status(400).json({
-          error: error.message,
-        });
-      } else {
-        res.status(500).json({
-          error: "Failed to hire applicant",
-        });
-      }
+      handleError(error, res, "Failed to hire applicant");
     }
   };
 
@@ -202,25 +160,7 @@ export class ApplicationController {
         data: result,
       });
     } catch (error) {
-      console.error("Error rejecting applicant:", error);
-
-      if (error instanceof ValidationError) {
-        res.status(400).json({
-          error: error.message,
-        });
-      } else if (error instanceof NotFoundError) {
-        res.status(404).json({
-          error: error.message,
-        });
-      } else if (error instanceof BusinessLogicError) {
-        res.status(400).json({
-          error: error.message,
-        });
-      } else {
-        res.status(500).json({
-          error: "Failed to reject applicant",
-        });
-      }
+      handleError(error, res, "Failed to reject applicant");
     }
   };
 }
