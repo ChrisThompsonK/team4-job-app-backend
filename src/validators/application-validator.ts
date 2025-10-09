@@ -62,4 +62,29 @@ export class ApplicationValidator {
       errors: allErrors,
     };
   }
+
+  validateStatusTransition(currentStatus: string, newStatus: string): ValidationResult {
+    const errors: ValidationError[] = [];
+
+    // Can only hire or reject applications that are "in progress"
+    if (currentStatus !== "in progress") {
+      errors.push({
+        field: "status",
+        message: `Cannot change status from "${currentStatus}" to "${newStatus}". Only applications with status "in progress" can be hired or rejected.`,
+      });
+    }
+
+    // Validate new status is valid
+    if (newStatus !== "hired" && newStatus !== "rejected") {
+      errors.push({
+        field: "status",
+        message: `Invalid status "${newStatus}". Must be "hired" or "rejected".`,
+      });
+    }
+
+    return {
+      isValid: errors.length === 0,
+      errors,
+    };
+  }
 }
