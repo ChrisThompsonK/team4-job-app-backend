@@ -172,4 +172,55 @@ describe("ApplicationValidator", () => {
       expect(result.errors[0]?.field).toBe("cvText");
     });
   });
+
+  describe("validateStatusTransition", () => {
+    it("should return valid when transitioning from 'in progress' to 'hired'", () => {
+      const result = validator.validateStatusTransition("in progress", "hired");
+
+      expect(result.isValid).toBe(true);
+      expect(result.errors).toHaveLength(0);
+    });
+
+    it("should return valid when transitioning from 'in progress' to 'rejected'", () => {
+      const result = validator.validateStatusTransition("in progress", "rejected");
+
+      expect(result.isValid).toBe(true);
+      expect(result.errors).toHaveLength(0);
+    });
+
+    it("should return invalid when transitioning from 'hired' status", () => {
+      const result = validator.validateStatusTransition("hired", "rejected");
+
+      expect(result.isValid).toBe(false);
+      expect(result.errors).toHaveLength(1);
+      expect(result.errors[0]?.field).toBe("status");
+      expect(result.errors[0]?.message).toContain('Cannot change status from "hired"');
+      expect(result.errors[0]?.message).toContain('Only applications with status "in progress"');
+    });
+
+    it("should return invalid when transitioning from 'rejected' status", () => {
+      const result = validator.validateStatusTransition("rejected", "hired");
+
+      expect(result.isValid).toBe(false);
+      expect(result.errors).toHaveLength(1);
+      expect(result.errors[0]?.field).toBe("status");
+      expect(result.errors[0]?.message).toContain('Cannot change status from "rejected"');
+    });
+
+    it("should return invalid when new status is not 'hired' or 'rejected'", () => {
+      const result = validator.validateStatusTransition("in progress", "invalid");
+
+      expect(result.isValid).toBe(false);
+      expect(result.errors).toHaveLength(1);
+      expect(result.errors[0]?.field).toBe("status");
+      expect(result.errors[0]?.message).toContain('Invalid status "invalid"');
+    });
+
+    it("should return multiple errors when both current status and new status are invalid", () => {
+      const result = validator.validateStatusTransition("hired", "invalid");
+
+      expect(result.isValid).toBe(false);
+      expect(result.errors).toHaveLength(2);
+    });
+  });
 });

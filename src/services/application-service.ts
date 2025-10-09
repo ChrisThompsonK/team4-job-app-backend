@@ -1,3 +1,4 @@
+import { db } from "../db/index.js";
 import type { NewApplication } from "../db/schema.js";
 import { ApplicationRepository } from "../repositories/application-repository.js";
 import { JobRoleRepository } from "../repositories/job-role-repository.js";
@@ -93,5 +94,98 @@ export class ApplicationService {
       ...app,
       createdAt: new Date(app.createdAt),
     }));
+  }
+
+  async hireApplicant(applicationId: number) {
+    // Validate application ID
+    if (!applicationId || !Number.isInteger(applicationId) || applicationId <= 0) {
+      throw new Error("Valid application ID is required");
+    }
+
+    // Use transaction to ensure atomicity
+    return await db.transaction(async (_tx) => {
+      // Get application with job role data
+      const result = await this.applicationRepository.findByIdWithJobRole(applicationId);
+
+      if (!result) {
+        throw new Error("Application not found");
+      }
+
+      const { application, jobRole } = result;
+
+      // Validate status transition
+      const statusValidation = this.validator.validateStatusTransition(application.status, "hired");
+      if (!statusValidation.isValid) {
+        throw new Error(statusValidation.errors.map((e) => e.message).join(", "));
+      }
+
+      // Check if there are open positions
+      if (jobRole.numberOfOpenPositions <= 0) {
+        throw new Error("No open positions available for this job role");
+      }
+
+      // Update application status to hired
+      const updatedApplication = await this.applicationRepository.updateStatus(
+        applicationId,
+        "hired"
+      );
+
+      if (!updatedApplication) {
+        throw new Error("Failed to update application status");
+      }
+
+      // Decrement open positions
+      const updatedJobRole = await this.jobRoleRepository.decrementOpenPositions(jobRole.id);
+
+      if (!updatedJobRole) {
+        throw new Error("Failed to update job role positions");
+      }
+
+      return {
+        application: {
+          ...updatedApplication,
+          createdAt: new Date(updatedApplication.createdAt),
+        },
+        jobRole: updatedJobRole,
+      };
+    });
+  }
+
+  async rejectApplicant(applicationId: number) {
+    // Validate application ID
+    if (!applicationId || !Number.isInteger(applicationId) || applicationId <= 0) {
+      throw new Error("Valid application ID is required");
+    }
+
+    // Get application
+    const application = await this.applicationRepository.findById(applicationId);
+
+    if (!application) {
+      throw new Error("Application not found");
+    }
+
+    // Validate status transition
+    const statusValidation = this.validator.validateStatusTransition(
+      application.status,
+      "rejected"
+    );
+    if (!statusValidation.isValid) {
+      throw new Error(statusValidation.errors.map((e) => e.message).join(", "));
+    }
+
+    // Update application status to rejected
+    const updatedApplication = await this.applicationRepository.updateStatus(
+      applicationId,
+      "rejected"
+    );
+
+    if (!updatedApplication) {
+      throw new Error("Failed to update application status");
+    }
+
+    return {
+      ...updatedApplication,
+      createdAt: new Date(updatedApplication.createdAt),
+    };
   }
 }
