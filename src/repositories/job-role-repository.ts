@@ -1,4 +1,4 @@
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import { db } from "../db/index.js";
 import type { NewJobRole } from "../db/schema.js";
 import { jobRoles } from "../db/schema.js";
@@ -19,6 +19,15 @@ export class JobRoleRepository {
 
   async create(jobRole: NewJobRole) {
     const result = await db.insert(jobRoles).values(jobRole).returning();
+    return result[0] || null;
+  }
+
+  async decrementOpenPositions(id: number) {
+    const result = await db
+      .update(jobRoles)
+      .set({ numberOfOpenPositions: sql`${jobRoles.numberOfOpenPositions} - 1` })
+      .where(eq(jobRoles.id, id))
+      .returning();
     return result[0] || null;
   }
 }

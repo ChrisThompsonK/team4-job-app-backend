@@ -1,5 +1,5 @@
 import { db } from "./index.js";
-import { jobRoles } from "./schema.js";
+import { type JobRoleStatus, jobRoles } from "./schema.js";
 
 const sampleJobs = [
   {
@@ -12,7 +12,7 @@ const sampleJobs = [
       "We're looking for a skilled Frontend Developer to join our dynamic team. You'll be responsible for creating engaging user interfaces and working with modern web technologies.",
     keyResponsibilities:
       "Develop responsive web applications using React and TypeScript. Collaborate with design teams to implement UI/UX requirements. Write clean, maintainable code following best practices.",
-    status: "open",
+    status: "open" as JobRoleStatus,
     numberOfOpenPositions: 2,
   },
   {
@@ -25,7 +25,7 @@ const sampleJobs = [
       "Join our backend team to build scalable APIs and microservices. You'll work with cutting-edge technologies and solve complex technical challenges.",
     keyResponsibilities:
       "Design and implement REST APIs. Manage database architecture and optimization. Ensure system scalability and performance.",
-    status: "open",
+    status: "open" as JobRoleStatus,
     numberOfOpenPositions: 1,
   },
   {
@@ -38,7 +38,7 @@ const sampleJobs = [
       "Exciting opportunity to work with a fast-growing startup. You'll be involved in both frontend and backend development, working across the entire stack.",
     keyResponsibilities:
       "Develop full-stack applications. Work with React, Node.js, and databases. Participate in code reviews and team collaboration.",
-    status: "open",
+    status: "open" as JobRoleStatus,
     numberOfOpenPositions: 3,
   },
   {
@@ -51,7 +51,7 @@ const sampleJobs = [
       "Lead our DevOps initiatives to streamline development and deployment processes. Work with containerization, CI/CD pipelines, and cloud infrastructure.",
     keyResponsibilities:
       "Manage Kubernetes clusters and Docker containers. Implement CI/CD pipelines using Jenkins/GitLab CI. Monitor system performance and optimize cloud costs.",
-    status: "open",
+    status: "open" as JobRoleStatus,
     numberOfOpenPositions: 1,
   },
   {
@@ -64,7 +64,7 @@ const sampleJobs = [
       "Join our data science team to extract insights from complex datasets. Use machine learning to drive business decisions and improve product offerings.",
     keyResponsibilities:
       "Develop predictive models using Python and R. Create data visualizations and reports. Collaborate with stakeholders to identify analytical opportunities.",
-    status: "open",
+    status: "open" as JobRoleStatus,
     numberOfOpenPositions: 2,
   },
   {
@@ -77,7 +77,7 @@ const sampleJobs = [
       "Create exceptional user experiences through thoughtful design. Work closely with product teams to research, prototype, and test user interfaces.",
     keyResponsibilities:
       "Conduct user research and usability testing. Design wireframes and prototypes using Figma. Collaborate with developers to implement designs.",
-    status: "open",
+    status: "open" as JobRoleStatus,
     numberOfOpenPositions: 1,
   },
   {
@@ -90,7 +90,7 @@ const sampleJobs = [
       "Drive product strategy and roadmap development. Work with cross-functional teams to deliver innovative features that delight customers.",
     keyResponsibilities:
       "Define product requirements and user stories. Analyze market trends and competitor landscape. Coordinate with engineering and design teams.",
-    status: "open",
+    status: "open" as JobRoleStatus,
     numberOfOpenPositions: 1,
   },
   {
@@ -103,7 +103,7 @@ const sampleJobs = [
       "Develop native mobile applications for iOS and Android platforms. Create smooth, intuitive experiences for millions of users worldwide.",
     keyResponsibilities:
       "Build native apps using Swift and Kotlin. Implement REST API integrations. Optimize app performance and user experience.",
-    status: "open",
+    status: "open" as JobRoleStatus,
     numberOfOpenPositions: 2,
   },
   {
@@ -116,7 +116,7 @@ const sampleJobs = [
       "Protect our systems and data from cyber threats. Monitor security incidents, implement safeguards, and ensure compliance with regulations.",
     keyResponsibilities:
       "Monitor security events and respond to incidents. Conduct vulnerability assessments. Develop security policies and procedures.",
-    status: "open",
+    status: "open" as JobRoleStatus,
     numberOfOpenPositions: 1,
   },
   {
@@ -129,7 +129,7 @@ const sampleJobs = [
       "Design and implement cloud infrastructure solutions. Lead the migration of legacy systems to modern cloud platforms like AWS and Azure.",
     keyResponsibilities:
       "Design scalable cloud architectures. Implement Infrastructure as Code using Terraform. Optimize cloud costs and performance.",
-    status: "open",
+    status: "open" as JobRoleStatus,
     numberOfOpenPositions: 1,
   },
   {
@@ -142,7 +142,7 @@ const sampleJobs = [
       "Ensure software quality through comprehensive testing strategies. Develop automated test suites and work closely with development teams.",
     keyResponsibilities:
       "Design and execute test plans. Develop automated tests using Selenium and Jest. Perform regression and performance testing.",
-    status: "open",
+    status: "open" as JobRoleStatus,
     numberOfOpenPositions: 2,
   },
   {
@@ -155,7 +155,7 @@ const sampleJobs = [
       "Build and deploy machine learning models at scale. Work with large datasets to create intelligent systems that drive business value.",
     keyResponsibilities:
       "Develop ML models using TensorFlow and PyTorch. Deploy models to production environments. Optimize model performance and accuracy.",
-    status: "open",
+    status: "open" as JobRoleStatus,
     numberOfOpenPositions: 1,
   },
   {
@@ -168,7 +168,7 @@ const sampleJobs = [
       "Join our frontend team to build beautiful, responsive web applications. Great opportunity for a junior developer to grow their skills.",
     keyResponsibilities:
       "Develop user interfaces using Vue.js and CSS. Implement responsive designs for mobile and desktop. Write unit tests for frontend components.",
-    status: "open",
+    status: "open" as JobRoleStatus,
     numberOfOpenPositions: 3,
   },
   {
@@ -181,7 +181,7 @@ const sampleJobs = [
       "Bridge the gap between business requirements and technical solutions. Analyze processes and recommend improvements to drive efficiency.",
     keyResponsibilities:
       "Gather and document business requirements. Create process flow diagrams. Facilitate stakeholder meetings and workshops.",
-    status: "open",
+    status: "open" as JobRoleStatus,
     numberOfOpenPositions: 1,
   },
   {
@@ -194,7 +194,7 @@ const sampleJobs = [
       "Ensure high availability and reliability of our production systems. Monitor performance, troubleshoot issues, and implement automation.",
     keyResponsibilities:
       "Monitor system health and performance metrics. Implement automation scripts. Participate in on-call rotation for incident response.",
-    status: "open",
+    status: "open" as JobRoleStatus,
     numberOfOpenPositions: 2,
   },
 ];
