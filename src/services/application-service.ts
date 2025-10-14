@@ -6,7 +6,7 @@ import { JobRoleRepository } from "../repositories/job-role-repository.js";
 import { ApplicationValidator } from "../validators/application-validator.js";
 
 interface CreateApplicationInput {
-  userId: number;
+  userId: string;
   jobRoleId: number;
   cvText: string;
 }

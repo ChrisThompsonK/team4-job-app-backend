@@ -122,7 +122,7 @@ describe("ApplicationValidator", () => {
   describe("validateApplication", () => {
     it("should return valid when both fields are valid", () => {
       const validData = {
-        userId: 1,
+        userId: "user123",
         jobRoleId: 1,
         cvText: "This is a valid CV text with more than 50 characters to pass validation.",
       };
@@ -135,7 +135,7 @@ describe("ApplicationValidator", () => {
 
     it("should return all errors when both fields are invalid", () => {
       const invalidData = {
-        userId: 0,
+        userId: "",
         jobRoleId: 0,
         cvText: "Short",
       };
@@ -151,7 +151,7 @@ describe("ApplicationValidator", () => {
 
     it("should return only jobRoleId error when only jobRoleId is invalid", () => {
       const data = {
-        userId: 1,
+        userId: "user123",
         jobRoleId: -1,
         cvText: "This is a valid CV text with more than 50 characters to pass validation.",
       };
@@ -165,7 +165,7 @@ describe("ApplicationValidator", () => {
 
     it("should return only cvText error when only cvText is invalid", () => {
       const data = {
-        userId: 1,
+        userId: "user123",
         jobRoleId: 1,
         cvText: "",
       };

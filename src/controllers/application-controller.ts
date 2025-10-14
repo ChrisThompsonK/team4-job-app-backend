@@ -21,7 +21,7 @@ export class ApplicationController {
       }
 
       const application = await this.service.createApplication({
-        userId: Number.parseInt(userId, 10),
+        userId: userId,
         jobRoleId: Number.parseInt(jobRoleId, 10),
         cvText,
       });

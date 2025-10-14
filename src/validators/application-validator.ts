@@ -51,10 +51,10 @@ export class ApplicationValidator {
     };
   }
 
-  validateUserId(userId: number): ValidationResult {
+  validateUserId(userId: string): ValidationResult {
     const errors: ValidationError[] = [];
 
-    if (!userId || !Number.isInteger(userId) || userId <= 0) {
+    if (!userId || typeof userId !== "string" || userId.trim().length === 0) {
       errors.push({
         field: "userId",
         message: "Valid user ID is required",
@@ -68,7 +68,7 @@ export class ApplicationValidator {
   }
 
   validateApplication(data: {
-    userId: number;
+    userId: string;
     jobRoleId: number;
     cvText: string;
   }): ValidationResult {
