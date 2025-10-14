@@ -204,7 +204,6 @@ async function seed() {
   console.log("🌱 Seeding database...");
 
   try {
-
     // Create sample users with base64 encoded passwords (for demo only)
     function base64Encode(str: string): string {
       return Buffer.from(str).toString("base64");
