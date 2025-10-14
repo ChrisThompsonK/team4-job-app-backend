@@ -1,5 +1,8 @@
 import bcrypt from "bcryptjs";
 import type { Request, Response } from "express";
+import { eq } from "drizzle-orm";
+import { db } from "../db/index.js";
+import * as schema from "../db/schema.js";
 import { handleError } from "../errors/custom-errors.js";
 import { auth } from "../lib/auth.js";
 import { generateToken } from "../middleware/auth.js";
@@ -125,6 +128,16 @@ export class AuthController {
         },
         headers: req.headers as Record<string, string>,
       });
+
+      // Update the user with firstName and lastName after creation
+      if (result && result.user) {
+        await db.update(schema.user)
+          .set({ 
+            firstName, 
+            lastName 
+          })
+          .where(eq(schema.user.id, result.user.id));
+      }
 
       if (result && result.user) {
         // Generate JWT token for compatibility

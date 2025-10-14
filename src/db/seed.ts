@@ -1,6 +1,6 @@
-// import bcrypt from "bcrypt";
+import crypto from "node:crypto";
 import { db } from "./index.js";
-import { type JobRoleStatus, jobRoles, users } from "./schema.js";
+import { type JobRoleStatus, jobRoles, user, account } from "./schema.js";
 
 const sampleJobs = [
   {
@@ -200,57 +200,95 @@ const sampleJobs = [
   },
 ];
 
+async function createBetterAuthUser(
+  email: string,
+  password: string,
+  firstName: string,
+  lastName: string,
+  role: "admin" | "user" = "user"
+) {
+  const userId = crypto.randomUUID();
+  const now = new Date();
+  // Use base64 encoding to match our custom Better Auth configuration
+  const hashedPassword = Buffer.from(password).toString("base64");
+
+  // Create user record
+  await db.insert(user).values({
+    id: userId,
+    name: `${firstName} ${lastName}`,
+    email,
+    emailVerified: true, // Set to true for seed users
+    firstName,
+    lastName,
+    role,
+    createdAt: now,
+    updatedAt: now,
+  });
+
+  // Create account record with password for email/password authentication
+  await db.insert(account).values({
+    id: crypto.randomUUID(),
+    accountId: email, // Use email as account ID for email/password provider
+    providerId: "credential", // Better Auth uses 'credential' for email/password authentication
+    userId,
+    password: hashedPassword,
+    createdAt: now,
+    updatedAt: now,
+  });
+
+  return userId;
+}
+
 async function seed() {
   console.log("🌱 Seeding database...");
 
   try {
-    // Create sample users with base64 encoded passwords (for demo only)
-    function base64Encode(str: string): string {
-      return Buffer.from(str).toString("base64");
-    }
-    const encodedPassword = base64Encode("password123");
-    const now = new Date().toISOString();
+    // Create sample users using Better Auth format
+    console.log("Creating Better Auth users...");
+    
+    const adminId = await createBetterAuthUser(
+      "admin@example.com",
+      "password123",
+      "Admin",
+      "User",
+      "admin"
+    );
+    
+    const regularUserId = await createBetterAuthUser(
+      "user@example.com", 
+      "password123",
+      "Regular",
+      "User",
+      "user"
+    );
+    
+    const johnId = await createBetterAuthUser(
+      "john.doe@example.com",
+      "password123", 
+      "John",
+      "Doe",
+      "user"
+    );
 
-    const sampleUsers = [
-      {
-        email: "admin@example.com",
-        password: encodedPassword,
-        firstName: "Admin",
-        lastName: "User",
-        role: "admin" as const,
-        createdAt: now,
-        updatedAt: now,
-      },
-      {
-        email: "user@example.com",
-        password: encodedPassword,
-        firstName: "Regular",
-        lastName: "User",
-        role: "user" as const,
-        createdAt: now,
-        updatedAt: now,
-      },
-      {
-        email: "john.doe@example.com",
-        password: encodedPassword,
-        firstName: "John",
-        lastName: "Doe",
-        role: "user" as const,
-        createdAt: now,
-        updatedAt: now,
-      },
-    ];
+    console.log("✅ Better Auth users created!");
+    console.log("   - admin@example.com (password: password123) [admin]");
+    console.log("   - user@example.com (password: password123) [user]");
+    console.log("   - john.doe@example.com (password: password123) [user]");
 
-    await db.insert(users).values(sampleUsers);
-    console.log("✅ Sample users created!");
-    console.log("   - admin@example.com (password: password123)");
-    console.log("   - user@example.com (password: password123)");
-    console.log("   - john.doe@example.com (password: password123)");
-
+    // Create sample job roles
+    console.log("Creating job roles...");
     await db.insert(jobRoles).values(sampleJobs);
+    console.log("✅ Job roles created!");
+
     console.log("✅ Database seeded successfully!");
+    console.log("\n🔑 Login credentials:");
+    console.log("   Admin: admin@example.com / password123");
+    console.log("   User: user@example.com / password123");
+    console.log("   User: john.doe@example.com / password123");
   } catch (error) {
     console.error("❌ Error seeding database:", error);
+    console.error(error);
+    process.exit(1);
   }
 }
 
