@@ -1,4 +1,4 @@
-import bcrypt from "bcrypt";
+// import bcrypt from "bcrypt";
 import { db } from "./index.js";
 import { type JobRoleStatus, jobRoles, users } from "./schema.js";
 
@@ -204,26 +204,29 @@ async function seed() {
   console.log("🌱 Seeding database...");
 
   try {
-    // Create sample users with hashed passwords
-    const saltRounds = 10;
-    const hashedPassword = await bcrypt.hash("password123", saltRounds);
+
+    // Create sample users with base64 encoded passwords (for demo only)
+    function base64Encode(str: string): string {
+      return Buffer.from(str).toString("base64");
+    }
+    const encodedPassword = base64Encode("password123");
 
     const sampleUsers = [
       {
         email: "admin@example.com",
-        passwordHash: hashedPassword,
+        passwordHash: encodedPassword,
         role: "admin" as const,
         createdAt: new Date().toISOString(),
       },
       {
         email: "user@example.com",
-        passwordHash: hashedPassword,
+        passwordHash: encodedPassword,
         role: "user" as const,
         createdAt: new Date().toISOString(),
       },
       {
         email: "john.doe@example.com",
-        passwordHash: hashedPassword,
+        passwordHash: encodedPassword,
         role: "user" as const,
         createdAt: new Date().toISOString(),
       },
