@@ -79,12 +79,13 @@ export class JobRoleController {
       }
 
       const { limit: parsedLimit, offset: parsedOffset } = paginationResult.params || {};
-      const jobs = await this.service.getAllJobRoles(parsedLimit, parsedOffset);
+      const result = await this.service.getAllJobRoles(parsedLimit, parsedOffset);
 
       res.json({
         success: true,
-        data: jobs,
-        count: jobs.length,
+        data: result.jobs,
+        count: result.jobs.length,
+        total: result.total,
         pagination: {
           limit: parsedLimit,
           offset: parsedOffset,

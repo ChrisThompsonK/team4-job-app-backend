@@ -44,4 +44,9 @@ export class JobRoleRepository {
       .returning();
     return result[0] || null;
   }
+
+  async count() {
+    const result = await db.select({ count: sql<number>`count(*)` }).from(jobRoles);
+    return result[0]?.count || 0;
+  }
 }

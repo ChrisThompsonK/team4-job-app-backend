@@ -26,12 +26,16 @@ export class JobRoleService {
 
   async getAllJobRoles(limit?: number, offset?: number) {
     const jobs = await this.repository.findAll(limit, offset);
+    const total = await this.repository.count();
 
     // Convert closingDate string to Date object for frontend
-    return jobs.map((job) => ({
-      ...job,
-      closingDate: new Date(job.closingDate),
-    }));
+    return {
+      jobs: jobs.map((job) => ({
+        ...job,
+        closingDate: new Date(job.closingDate),
+      })),
+      total,
+    };
   }
 
   async getJobRoleById(id: number) {
