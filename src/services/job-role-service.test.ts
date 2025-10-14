@@ -15,6 +15,7 @@ describe("JobRoleService", () => {
     findById: ReturnType<typeof vi.fn>;
     findByStatus: ReturnType<typeof vi.fn>;
     create: ReturnType<typeof vi.fn>;
+    count: ReturnType<typeof vi.fn>;
   };
 
   let mockValidator: {
@@ -29,6 +30,7 @@ describe("JobRoleService", () => {
       findById: vi.fn(),
       findByStatus: vi.fn(),
       create: vi.fn(),
+      count: vi.fn(),
     };
 
     mockValidator = {
@@ -71,22 +73,27 @@ describe("JobRoleService", () => {
       ];
 
       mockRepository.findAll.mockResolvedValue(mockJobs);
+      mockRepository.count.mockResolvedValue(2);
 
       const result = await service.getAllJobRoles();
 
       expect(mockRepository.findAll).toHaveBeenCalledOnce();
-      expect(result).toHaveLength(2);
-      expect(result[0]?.closingDate).toBeInstanceOf(Date);
-      expect(result[1]?.closingDate).toBeInstanceOf(Date);
-      expect(result[0]?.name).toBe("Software Engineer");
+      expect(mockRepository.count).toHaveBeenCalledOnce();
+      expect(result.jobs).toHaveLength(2);
+      expect(result.total).toBe(2);
+      expect(result.jobs[0]?.closingDate).toBeInstanceOf(Date);
+      expect(result.jobs[1]?.closingDate).toBeInstanceOf(Date);
+      expect(result.jobs[0]?.name).toBe("Software Engineer");
     });
 
     it("should return empty array when no jobs exist", async () => {
       mockRepository.findAll.mockResolvedValue([]);
+      mockRepository.count.mockResolvedValue(0);
 
       const result = await service.getAllJobRoles();
 
-      expect(result).toEqual([]);
+      expect(result.jobs).toEqual([]);
+      expect(result.total).toBe(0);
     });
   });
 
