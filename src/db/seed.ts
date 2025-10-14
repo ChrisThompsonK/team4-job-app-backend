@@ -1,6 +1,6 @@
+import { base64Encode } from "../lib/auth.js";
 import { db } from "./index.js";
 import { type JobRoleStatus, jobRoles, users } from "./schema.js";
-import { base64Encode } from "../lib/auth.js";
 
 const sampleJobs = [
   {
