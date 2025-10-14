@@ -11,16 +11,17 @@ export class ApplicationController {
 
   createApplication = async (req: Request, res: Response): Promise<void> => {
     try {
-      const { jobRoleId, cvText } = req.body;
+      const { jobRoleId, cvText, userId } = req.body;
 
-      if (!jobRoleId || !cvText) {
+      if (!jobRoleId || !cvText || !userId) {
         res.status(400).json({
-          error: "Job role ID and CV text are required",
+          error: "Job role ID, CV text, and user ID are required",
         });
         return;
       }
 
       const application = await this.service.createApplication({
+        userId: Number.parseInt(userId, 10),
         jobRoleId: Number.parseInt(jobRoleId, 10),
         cvText,
       });
