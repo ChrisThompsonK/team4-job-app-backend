@@ -51,11 +51,36 @@ export class ApplicationValidator {
     };
   }
 
-  validateApplication(data: { jobRoleId: number; cvText: string }): ValidationResult {
+  validateUserId(userId: number): ValidationResult {
+    const errors: ValidationError[] = [];
+
+    if (!userId || !Number.isInteger(userId) || userId <= 0) {
+      errors.push({
+        field: "userId",
+        message: "Valid user ID is required",
+      });
+    }
+
+    return {
+      isValid: errors.length === 0,
+      errors,
+    };
+  }
+
+  validateApplication(data: {
+    userId: number;
+    jobRoleId: number;
+    cvText: string;
+  }): ValidationResult {
+    const userIdValidation = this.validateUserId(data.userId);
     const jobRoleIdValidation = this.validateJobRoleId(data.jobRoleId);
     const cvTextValidation = this.validateCvText(data.cvText);
 
-    const allErrors = [...jobRoleIdValidation.errors, ...cvTextValidation.errors];
+    const allErrors = [
+      ...userIdValidation.errors,
+      ...jobRoleIdValidation.errors,
+      ...cvTextValidation.errors,
+    ];
 
     return {
       isValid: allErrors.length === 0,

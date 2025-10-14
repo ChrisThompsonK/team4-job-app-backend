@@ -6,6 +6,7 @@ import { JobRoleRepository } from "../repositories/job-role-repository.js";
 import { ApplicationValidator } from "../validators/application-validator.js";
 
 interface CreateApplicationInput {
+  userId: number;
   jobRoleId: number;
   cvText: string;
 }
@@ -50,6 +51,7 @@ export class ApplicationService {
 
     // Create the application
     const newApplication: NewApplication = {
+      userId: input.userId,
       jobRoleId: input.jobRoleId,
       cvText: input.cvText.trim(),
       status: "in progress",
