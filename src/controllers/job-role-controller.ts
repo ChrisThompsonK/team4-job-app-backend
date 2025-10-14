@@ -13,31 +13,39 @@ interface ParsedPaginationResult {
   params?: PaginationParams;
 }
 
+function parseIntParam(value: unknown, name: string, minValue = 0): { isValid: boolean; value?: number; error?: string } {
+  if (value === undefined) {
+    return { isValid: true };
+  }
+
+  const parsed = parseInt(value as string, 10);
+  if (Number.isNaN(parsed) || parsed < minValue) {
+    const constraint = minValue === 0 ? "non-negative integer" : "positive integer";
+    return {
+      isValid: false,
+      error: `Invalid ${name} parameter. Must be a ${constraint}.`,
+    };
+  }
+
+  return { isValid: true, value: parsed };
+}
+
 function parsePaginationParams(limit?: unknown, offset?: unknown): ParsedPaginationResult {
   const params: PaginationParams = {};
 
-  // Validate and parse limit
-  if (limit !== undefined) {
-    const limitNum = parseInt(limit as string, 10);
-    if (Number.isNaN(limitNum) || limitNum < 1) {
-      return {
-        isValid: false,
-        error: "Invalid limit parameter. Must be a positive integer.",
-      };
-    }
-    params.limit = limitNum;
-  }
+  const paramsToParse: Array<{ value: unknown; name: keyof PaginationParams; minValue: number }> = [
+    { value: limit, name: "limit", minValue: 1 },
+    { value: offset, name: "offset", minValue: 0 },
+  ];
 
-  // Validate and parse offset
-  if (offset !== undefined) {
-    const offsetNum = parseInt(offset as string, 10);
-    if (Number.isNaN(offsetNum) || offsetNum < 0) {
-      return {
-        isValid: false,
-        error: "Invalid offset parameter. Must be a non-negative integer.",
-      };
+  for (const { value, name, minValue } of paramsToParse) {
+    const result = parseIntParam(value, name, minValue);
+    if (!result.isValid) {
+      return { isValid: false, error: result.error || `Invalid ${name} parameter` };
     }
-    params.offset = offsetNum;
+    if (result.value !== undefined) {
+      params[name] = result.value;
+    }
   }
 
   return {
