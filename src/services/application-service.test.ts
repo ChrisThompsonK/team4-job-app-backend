@@ -7,7 +7,9 @@ import { ApplicationService } from "./application-service";
 
 // Mock the database module to prevent actual database connections
 vi.mock("../db/index.js", () => ({
-  db: {},
+  db: {
+    transaction: vi.fn((callback) => callback()),
+  },
 }));
 
 describe("ApplicationService", () => {
@@ -15,14 +17,18 @@ describe("ApplicationService", () => {
     create: ReturnType<typeof vi.fn>;
     findById: ReturnType<typeof vi.fn>;
     findByJobRoleId: ReturnType<typeof vi.fn>;
+    updateStatus: ReturnType<typeof vi.fn>;
+    findByIdWithJobRole: ReturnType<typeof vi.fn>;
   };
 
   let mockJobRoleRepository: {
     findById: ReturnType<typeof vi.fn>;
+    decrementOpenPositions: ReturnType<typeof vi.fn>;
   };
 
   let mockValidator: {
     validateApplication: ReturnType<typeof vi.fn>;
+    validateStatusTransition: ReturnType<typeof vi.fn>;
   };
 
   let service: ApplicationService;
@@ -32,14 +38,18 @@ describe("ApplicationService", () => {
       create: vi.fn(),
       findById: vi.fn(),
       findByJobRoleId: vi.fn(),
+      updateStatus: vi.fn(),
+      findByIdWithJobRole: vi.fn(),
     };
 
     mockJobRoleRepository = {
       findById: vi.fn(),
+      decrementOpenPositions: vi.fn(),
     };
 
     mockValidator = {
       validateApplication: vi.fn(),
+      validateStatusTransition: vi.fn(),
     };
 
     service = new ApplicationService(
@@ -283,6 +293,183 @@ describe("ApplicationService", () => {
       await expect(service.getApplicationsByJobRole(0)).rejects.toThrow(
         "Valid job role ID is required"
       );
+    });
+  });
+
+  describe("hireApplicant", () => {
+    const mockApplication = {
+      id: 1,
+      jobRoleId: 1,
+      cvText: "My CV text",
+      status: "in progress",
+      createdAt: "2025-10-08T12:00:00.000Z",
+    };
+
+    const mockJobRole: JobRole = {
+      id: 1,
+      name: "Software Engineer",
+      location: "Belfast",
+      capability: "Engineering",
+      band: "Senior",
+      closingDate: "2025-12-31T00:00:00.000Z",
+      summary: "Great role",
+      keyResponsibilities: "Code",
+      status: "open",
+      numberOfOpenPositions: 2,
+    };
+
+    it("should successfully hire an applicant", async () => {
+      mockApplicationRepository.findByIdWithJobRole.mockResolvedValue({
+        application: mockApplication,
+        jobRole: mockJobRole,
+      });
+
+      mockValidator.validateStatusTransition.mockReturnValue({
+        isValid: true,
+        errors: [],
+      });
+
+      const updatedApplication = { ...mockApplication, status: "hired" };
+      mockApplicationRepository.updateStatus.mockResolvedValue(updatedApplication);
+
+      const updatedJobRole = { ...mockJobRole, numberOfOpenPositions: 1 };
+      mockJobRoleRepository.decrementOpenPositions.mockResolvedValue(updatedJobRole);
+
+      const result = await service.hireApplicant(1);
+
+      expect(mockApplicationRepository.findByIdWithJobRole).toHaveBeenCalledWith(1);
+      expect(mockValidator.validateStatusTransition).toHaveBeenCalledWith("in progress", "hired");
+      expect(mockApplicationRepository.updateStatus).toHaveBeenCalledWith(1, "hired");
+      expect(mockJobRoleRepository.decrementOpenPositions).toHaveBeenCalledWith(1);
+      expect(result.application.status).toBe("hired");
+      expect(result.jobRole.numberOfOpenPositions).toBe(1);
+    });
+
+    it("should throw error when application not found", async () => {
+      mockApplicationRepository.findByIdWithJobRole.mockResolvedValue(null);
+
+      await expect(service.hireApplicant(1)).rejects.toThrow("Application not found");
+
+      expect(mockValidator.validateStatusTransition).not.toHaveBeenCalled();
+      expect(mockApplicationRepository.updateStatus).not.toHaveBeenCalled();
+    });
+
+    it("should throw error when status transition is invalid", async () => {
+      const hiredApplication = { ...mockApplication, status: "hired" };
+      mockApplicationRepository.findByIdWithJobRole.mockResolvedValue({
+        application: hiredApplication,
+        jobRole: mockJobRole,
+      });
+
+      mockValidator.validateStatusTransition.mockReturnValue({
+        isValid: false,
+        errors: [
+          {
+            field: "status",
+            message:
+              'Cannot change status from "hired" to "hired". Only applications with status "in progress" can be hired or rejected.',
+          },
+        ],
+      });
+
+      await expect(service.hireApplicant(1)).rejects.toThrow(
+        'Cannot change status from "hired" to "hired"'
+      );
+
+      expect(mockApplicationRepository.updateStatus).not.toHaveBeenCalled();
+    });
+
+    it("should throw error when no open positions available", async () => {
+      const jobRoleWithNoPositions = { ...mockJobRole, numberOfOpenPositions: 0 };
+      mockApplicationRepository.findByIdWithJobRole.mockResolvedValue({
+        application: mockApplication,
+        jobRole: jobRoleWithNoPositions,
+      });
+
+      mockValidator.validateStatusTransition.mockReturnValue({
+        isValid: true,
+        errors: [],
+      });
+
+      await expect(service.hireApplicant(1)).rejects.toThrow(
+        "No open positions available for this job role"
+      );
+
+      expect(mockApplicationRepository.updateStatus).not.toHaveBeenCalled();
+    });
+
+    it("should throw error for invalid application ID", async () => {
+      await expect(service.hireApplicant(0)).rejects.toThrow("Valid application ID is required");
+      await expect(service.hireApplicant(-1)).rejects.toThrow("Valid application ID is required");
+    });
+  });
+
+  describe("rejectApplicant", () => {
+    const mockApplication = {
+      id: 1,
+      jobRoleId: 1,
+      cvText: "My CV text",
+      status: "in progress",
+      createdAt: "2025-10-08T12:00:00.000Z",
+    };
+
+    it("should successfully reject an applicant", async () => {
+      mockApplicationRepository.findById.mockResolvedValue(mockApplication);
+
+      mockValidator.validateStatusTransition.mockReturnValue({
+        isValid: true,
+        errors: [],
+      });
+
+      const updatedApplication = { ...mockApplication, status: "rejected" };
+      mockApplicationRepository.updateStatus.mockResolvedValue(updatedApplication);
+
+      const result = await service.rejectApplicant(1);
+
+      expect(mockApplicationRepository.findById).toHaveBeenCalledWith(1);
+      expect(mockValidator.validateStatusTransition).toHaveBeenCalledWith(
+        "in progress",
+        "rejected"
+      );
+      expect(mockApplicationRepository.updateStatus).toHaveBeenCalledWith(1, "rejected");
+      expect(result.status).toBe("rejected");
+      expect(result.createdAt).toBeInstanceOf(Date);
+    });
+
+    it("should throw error when application not found", async () => {
+      mockApplicationRepository.findById.mockResolvedValue(null);
+
+      await expect(service.rejectApplicant(1)).rejects.toThrow("Application not found");
+
+      expect(mockValidator.validateStatusTransition).not.toHaveBeenCalled();
+      expect(mockApplicationRepository.updateStatus).not.toHaveBeenCalled();
+    });
+
+    it("should throw error when status transition is invalid", async () => {
+      const rejectedApplication = { ...mockApplication, status: "rejected" };
+      mockApplicationRepository.findById.mockResolvedValue(rejectedApplication);
+
+      mockValidator.validateStatusTransition.mockReturnValue({
+        isValid: false,
+        errors: [
+          {
+            field: "status",
+            message:
+              'Cannot change status from "rejected" to "rejected". Only applications with status "in progress" can be hired or rejected.',
+          },
+        ],
+      });
+
+      await expect(service.rejectApplicant(1)).rejects.toThrow(
+        'Cannot change status from "rejected" to "rejected"'
+      );
+
+      expect(mockApplicationRepository.updateStatus).not.toHaveBeenCalled();
+    });
+
+    it("should throw error for invalid application ID", async () => {
+      await expect(service.rejectApplicant(0)).rejects.toThrow("Valid application ID is required");
+      await expect(service.rejectApplicant(-1)).rejects.toThrow("Valid application ID is required");
     });
   });
 });

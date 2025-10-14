@@ -1,5 +1,9 @@
 import { integer, sqliteTable, text } from "drizzle-orm/sqlite-core";
 
+// Type definitions for status fields
+export type JobRoleStatus = "open" | "closed";
+export type ApplicationStatus = "in progress" | "hired" | "rejected";
+
 export const jobRoles = sqliteTable("job_roles", {
   id: integer("id").primaryKey({ autoIncrement: true }),
   name: text("name").notNull(),
@@ -9,7 +13,7 @@ export const jobRoles = sqliteTable("job_roles", {
   closingDate: text("closing_date").notNull(), // stored as ISO string
   summary: text("summary").notNull(),
   keyResponsibilities: text("key_responsibilities").notNull(),
-  status: text("status").notNull(), // "open" | "closed"
+  status: text("status").notNull().$type<JobRoleStatus>(), // "open" | "closed"
   numberOfOpenPositions: integer("number_of_open_positions").notNull(),
 });
 
@@ -22,7 +26,7 @@ export const applications = sqliteTable("applications", {
     .notNull()
     .references(() => jobRoles.id),
   cvText: text("cv_text").notNull(),
-  status: text("status").notNull().default("in progress"), // "in progress" | "reviewed" | "accepted" | "rejected"
+  status: text("status").notNull().default("in progress").$type<ApplicationStatus>(), // "in progress" | "hired" | "rejected"
   createdAt: text("created_at").notNull(), // stored as ISO string
 });
 

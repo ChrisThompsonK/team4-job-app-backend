@@ -1,7 +1,7 @@
-import { eq } from "drizzle-orm";
+import { desc, eq } from "drizzle-orm";
 import { db } from "../db/index.js";
-import type { NewApplication } from "../db/schema.js";
-import { applications } from "../db/schema.js";
+import type { ApplicationStatus, NewApplication } from "../db/schema.js";
+import { applications, jobRoles } from "../db/schema.js";
 
 export class ApplicationRepository {
   async create(application: NewApplication) {
@@ -19,6 +19,28 @@ export class ApplicationRepository {
       .select()
       .from(applications)
       .where(eq(applications.jobRoleId, jobRoleId))
-      .orderBy(applications.createdAt);
+      .orderBy(desc(applications.createdAt));
+  }
+
+  async updateStatus(id: number, status: ApplicationStatus) {
+    const result = await db
+      .update(applications)
+      .set({ status })
+      .where(eq(applications.id, id))
+      .returning();
+    return result[0] || null;
+  }
+
+  async findByIdWithJobRole(id: number) {
+    const result = await db
+      .select({
+        application: applications,
+        jobRole: jobRoles,
+      })
+      .from(applications)
+      .innerJoin(jobRoles, eq(applications.jobRoleId, jobRoles.id))
+      .where(eq(applications.id, id))
+      .limit(1);
+    return result[0] || null;
   }
 }
