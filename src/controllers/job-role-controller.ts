@@ -13,7 +13,11 @@ interface ParsedPaginationResult {
   params?: PaginationParams;
 }
 
-function parseIntParam(value: unknown, name: string, minValue = 0): { isValid: boolean; value?: number; error?: string } {
+function parseIntParam(
+  value: unknown,
+  name: string,
+  minValue = 0
+): { isValid: boolean; value?: number; error?: string } {
   if (value === undefined) {
     return { isValid: true };
   }
