@@ -1,30 +1,13 @@
-import { betterAuth } from "better-auth";
-import { drizzleAdapter } from "better-auth/adapters/drizzle";
-import { db } from "../db/index.js";
-import * as schema from "../db/schema.js";
+// Simple base64 password utilities - no external auth library needed
+export function base64Encode(str: string): string {
+  return Buffer.from(str).toString("base64");
+}
 
-export const auth = betterAuth({
-  database: drizzleAdapter(db, {
-    provider: "sqlite",
-    schema: {
-      user: schema.user,
-      session: schema.session,
-      account: schema.account,
-      verification: schema.verification,
-    },
-  }),
-  emailAndPassword: {
-    enabled: true,
-    requireEmailVerification: false,
-  },
-  session: {
-    expiresIn: 60 * 60 * 24, // 24 hours
-    updateAge: 60 * 60 * 24, // 24 hours
-  },
-  secret: process.env.BETTER_AUTH_SECRET || "your-secret-key-change-in-production",
-  baseURL: process.env.BETTER_AUTH_URL || "http://localhost:3001",
-  trustedOrigins: ["http://localhost:3000", "http://localhost:3001"],
-});
+export function base64Decode(str: string): string {
+  return Buffer.from(str, "base64").toString("utf8");
+}
 
-export type Session = typeof auth.$Infer.Session;
-export type User = typeof auth.$Infer.Session.user;
+export function verifyBase64Password(inputPassword: string, storedHash: string): boolean {
+  const decodedStored = base64Decode(storedHash);
+  return inputPassword === decodedStored;
+}

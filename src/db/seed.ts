@@ -1,4 +1,4 @@
-// import bcrypt from "bcrypt";
+import { base64Encode } from "../lib/auth.js";
 import { db } from "./index.js";
 import { type JobRoleStatus, jobRoles, users } from "./schema.js";
 
@@ -204,13 +204,10 @@ async function seed() {
   console.log("🌱 Seeding database...");
 
   try {
-    // Create sample users with base64 encoded passwords (for demo only)
-    function base64Encode(str: string): string {
-      return Buffer.from(str).toString("base64");
-    }
     const encodedPassword = base64Encode("password123");
     const now = new Date().toISOString();
 
+    // Create sample users using legacy users table for now
     const sampleUsers = [
       {
         email: "admin@example.com",

@@ -1,7 +1,10 @@
-import bcrypt from "bcryptjs";
+import crypto from "node:crypto";
+import { eq } from "drizzle-orm";
 import type { Request, Response } from "express";
+import { db } from "../db/index.js";
+import { account, user } from "../db/schema.js";
 import { handleError } from "../errors/custom-errors.js";
-import { auth } from "../lib/auth.js";
+import { base64Encode, verifyBase64Password } from "../lib/auth.js";
 import { generateToken } from "../middleware/auth.js";
 
 export class AuthController {
@@ -14,90 +17,61 @@ export class AuthController {
         return;
       }
 
-      // Try Better Auth first
-      try {
-        const session = await auth.api.signInEmail({
-          body: { email, password },
-          headers: req.headers as Record<string, string>,
-        });
+      // Find account by email
+      const accountRecord = await db
+        .select()
+        .from(account)
+        .where(eq(account.accountId, email))
+        .limit(1);
 
-        if (session && session.token) {
-          // Generate JWT token for compatibility
-          const token = generateToken({
-            id: parseInt(session.user.id),
-            email: session.user.email,
-            role: "user", // Default role since Better Auth doesn't have role by default
-          });
-
-          const [firstName, lastName] = session.user.name.split(" ");
-
-          res.status(200).json({
-            message: "Login successful",
-            token,
-            user: {
-              id: session.user.id,
-              email: session.user.email,
-              role: "user",
-              firstName: firstName || "",
-              lastName: lastName || "",
-            },
-            betterAuthSession: session.token,
-          });
-          return;
-        }
-      } catch (betterAuthError) {
-        console.log("Better Auth failed, trying fallback:", betterAuthError);
-      }
-
-      // Fallback to hardcoded users for demo purposes
-      const users = [
-        {
-          id: 1,
-          email: "admin@example.com",
-          password: await bcrypt.hash("password123", 12),
-          role: "admin",
-          firstName: "Admin",
-          lastName: "User",
-        },
-        {
-          id: 2,
-          email: "user@example.com",
-          password: await bcrypt.hash("password123", 12),
-          role: "user",
-          firstName: "Regular",
-          lastName: "User",
-        },
-      ];
-
-      const user = users.find((u) => u.email === email);
-
-      if (!user) {
+      if (accountRecord.length === 0) {
         res.status(401).json({ error: "Invalid email or password" });
         return;
       }
 
-      const isPasswordValid = await bcrypt.compare(password, user.password);
+      // Verify password
+      const accountData = accountRecord[0];
+      if (!accountData) {
+        res.status(401).json({ error: "Invalid email or password" });
+        return;
+      }
 
+      const isPasswordValid = verifyBase64Password(password, accountData.password);
       if (!isPasswordValid) {
         res.status(401).json({ error: "Invalid email or password" });
         return;
       }
 
+      // Get user details
+      const userRecord = await db.select().from(user).where(eq(user.email, email)).limit(1);
+
+      if (userRecord.length === 0) {
+        res.status(401).json({ error: "User not found" });
+        return;
+      }
+
+      const userData = userRecord[0];
+      if (!userData) {
+        res.status(401).json({ error: "User not found" });
+        return;
+      }
+
+      // Generate JWT token
       const token = generateToken({
-        id: user.id,
-        email: user.email,
-        role: user.role,
+        id: userData.id,
+        email: userData.email,
+        role: userData.role,
       });
 
       res.status(200).json({
         message: "Login successful",
         token,
         user: {
-          id: user.id,
-          email: user.email,
-          role: user.role,
-          firstName: user.firstName,
-          lastName: user.lastName,
+          id: userData.id,
+          email: userData.email,
+          role: userData.role,
+          firstName: userData.firstName,
+          lastName: userData.lastName,
         },
       });
     } catch (error) {
@@ -116,41 +90,56 @@ export class AuthController {
         return;
       }
 
-      // Use Better Auth for registration
-      const result = await auth.api.signUpEmail({
-        body: {
-          email,
-          password,
-          name: `${firstName} ${lastName}`,
-        },
-        headers: req.headers as Record<string, string>,
+      // Check if user already exists
+      const existingUser = await db.select().from(user).where(eq(user.email, email)).limit(1);
+
+      if (existingUser.length > 0) {
+        res.status(400).json({ error: "User already exists" });
+        return;
+      }
+
+      // Generate user ID and encode password
+      const userId = crypto.randomUUID();
+      const encodedPassword = base64Encode(password);
+
+      // Create user
+      const newUser = {
+        id: userId,
+        email,
+        firstName,
+        lastName,
+        role: "user" as const,
+      };
+
+      await db.insert(user).values(newUser);
+
+      // Create account
+      const newAccount = {
+        id: crypto.randomUUID(),
+        accountId: email,
+        password: encodedPassword,
+      };
+
+      await db.insert(account).values(newAccount);
+
+      // Generate JWT token
+      const token = generateToken({
+        id: userId,
+        email,
+        role: "user",
       });
 
-      if (result && result.user) {
-        // Generate JWT token for compatibility
-        const token = generateToken({
-          id: parseInt(result.user.id),
-          email: result.user.email,
-          role: "user", // Default role
-        });
-
-        const [userFirstName, userLastName] = result.user.name.split(" ");
-
-        res.status(201).json({
-          message: "User registered successfully",
-          token,
-          user: {
-            id: result.user.id,
-            email: result.user.email,
-            role: "user",
-            firstName: userFirstName || firstName,
-            lastName: userLastName || lastName,
-          },
-          betterAuthSession: result.token,
-        });
-      } else {
-        res.status(400).json({ error: "Registration failed" });
-      }
+      res.status(201).json({
+        message: "User registered successfully",
+        token,
+        user: {
+          id: userId,
+          email,
+          role: "user",
+          firstName,
+          lastName,
+        },
+      });
     } catch (error) {
       handleError(error, res, "Failed to register");
     }
@@ -171,25 +160,10 @@ export class AuthController {
     }
   }
 
-  async logout(req: Request, res: Response): Promise<void> {
+  async logout(_req: Request, res: Response): Promise<void> {
     try {
-      // Try to logout from Better Auth if session token is provided
-      const sessionToken =
-        req.headers.authorization?.split(" ")[1] || (req.headers["x-session-token"] as string);
-
-      if (sessionToken) {
-        try {
-          await auth.api.signOut({
-            headers: {
-              ...(req.headers as Record<string, string>),
-              authorization: `Bearer ${sessionToken}`,
-            },
-          });
-        } catch (betterAuthError) {
-          console.log("Better Auth logout failed:", betterAuthError);
-        }
-      }
-
+      // With JWT tokens, logout is handled client-side by removing the token
+      // No server-side session to invalidate
       res.status(200).json({
         message: "Logout successful",
       });

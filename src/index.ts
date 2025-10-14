@@ -1,5 +1,4 @@
 import express from "express";
-import { auth } from "./lib/auth.js";
 import applicationsRouter from "./routes/applications.js";
 import authRouter from "./routes/auth.js";
 import jobsRouter from "./routes/jobs.js";
@@ -21,10 +20,7 @@ app.use((_req, res, next) => {
   next();
 });
 
-// Better Auth API routes (for direct Better Auth access)
-app.use("/api/better-auth", auth.handler);
-
-// Our simplified JWT + Better Auth routes
+// Our minimal JWT auth routes
 app.use("/api/auth", authRouter);
 app.use("/api/jobs", jobsRouter);
 app.use("/api/applications", applicationsRouter);
@@ -35,14 +31,11 @@ app.get("/", (_req, res) => {
     message: "Job Application Backend API",
     status: "healthy",
     endpoints: {
-      // Authentication endpoints (JWT + Better Auth)
+      // Authentication endpoints (JWT only)
       register: "POST /api/auth/register",
       login: "POST /api/auth/login",
       me: "GET /api/auth/me (requires JWT token)",
       logout: "POST /api/auth/logout (requires JWT token)",
-
-      // Better Auth direct API (optional)
-      betterAuthAPI: "/api/better-auth/*",
 
       // Job endpoints
       jobs: "/api/jobs",
