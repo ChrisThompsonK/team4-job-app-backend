@@ -120,6 +120,9 @@ export type NewJobRole = typeof jobRoles.$inferInsert;
 
 export const applications = sqliteTable("applications", {
   id: integer("id").primaryKey({ autoIncrement: true }),
+  userId: integer("user_id")
+    .notNull()
+    .references(() => users.id),
   jobRoleId: integer("job_role_id")
     .notNull()
     .references(() => jobRoles.id),

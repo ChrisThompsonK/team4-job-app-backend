@@ -61,6 +61,7 @@ describe("ApplicationService", () => {
 
   describe("createApplication", () => {
     const validInput = {
+      userId: 1,
       jobRoleId: 1,
       cvText: "This is my CV text with more than 50 characters to pass validation requirements.",
     };
@@ -88,6 +89,7 @@ describe("ApplicationService", () => {
 
       const mockCreatedApplication = {
         id: 1,
+        userId: 1,
         jobRoleId: 1,
         cvText: validInput.cvText,
         status: "in progress",
@@ -101,6 +103,7 @@ describe("ApplicationService", () => {
       expect(mockValidator.validateApplication).toHaveBeenCalledWith(validInput);
       expect(mockJobRoleRepository.findById).toHaveBeenCalledWith(1);
       expect(mockApplicationRepository.create).toHaveBeenCalledWith({
+        userId: 1,
         jobRoleId: 1,
         cvText: validInput.cvText,
         status: "in progress",
@@ -190,6 +193,7 @@ describe("ApplicationService", () => {
 
       const mockCreatedApplication = {
         id: 1,
+        userId: 1,
         jobRoleId: 1,
         cvText: validInput.cvText,
         status: "in progress",
@@ -206,6 +210,7 @@ describe("ApplicationService", () => {
       await service.createApplication(inputWithWhitespace);
 
       expect(mockApplicationRepository.create).toHaveBeenCalledWith({
+        userId: 1,
         jobRoleId: 1,
         cvText: validInput.cvText,
         status: "in progress",
