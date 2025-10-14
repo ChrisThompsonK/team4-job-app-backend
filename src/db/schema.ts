@@ -3,6 +3,18 @@ import { integer, sqliteTable, text } from "drizzle-orm/sqlite-core";
 // Type definitions for status fields
 export type JobRoleStatus = "open" | "closed";
 export type ApplicationStatus = "in progress" | "hired" | "rejected";
+export type UserRole = "admin" | "user";
+
+export const users = sqliteTable("users", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  email: text("email").notNull().unique(),
+  passwordHash: text("password_hash").notNull(),
+  role: text("role").notNull().default("user").$type<UserRole>(), // "admin" | "user"
+  createdAt: text("created_at").notNull(), // stored as ISO string
+});
+
+export type User = typeof users.$inferSelect;
+export type NewUser = typeof users.$inferInsert;
 
 export const jobRoles = sqliteTable("job_roles", {
   id: integer("id").primaryKey({ autoIncrement: true }),
@@ -22,6 +34,9 @@ export type NewJobRole = typeof jobRoles.$inferInsert;
 
 export const applications = sqliteTable("applications", {
   id: integer("id").primaryKey({ autoIncrement: true }),
+  userId: integer("user_id")
+    .notNull()
+    .references(() => users.id),
   jobRoleId: integer("job_role_id")
     .notNull()
     .references(() => jobRoles.id),

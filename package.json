@@ -29,6 +29,7 @@
   "license": "ISC",
   "devDependencies": {
     "@biomejs/biome": "2.2.4",
+    "@types/bcrypt": "^6.0.0",
     "@types/better-sqlite3": "^7.6.13",
     "@types/express": "^5.0.3",
     "@types/node": "^24.6.0",
@@ -41,6 +42,7 @@
   },
   "dependencies": {
     "@libsql/client": "^0.15.15",
+    "bcrypt": "^6.0.0",
     "better-sqlite3": "^12.4.1",
     "dotenv": "^17.2.3",
     "drizzle-orm": "^0.44.6",
