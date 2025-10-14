@@ -1,6 +1,6 @@
-import { base64Encode } from "../lib/auth.js";
 import { db } from "./index.js";
 import { type JobRoleStatus, jobRoles, users } from "./schema.js";
+import { base64Encode } from "../lib/auth.js";
 
 const sampleJobs = [
   {
@@ -244,10 +244,20 @@ async function seed() {
     console.log("   - user@example.com (password: password123)");
     console.log("   - john.doe@example.com (password: password123)");
 
+    // Create sample job roles
+    console.log("Creating job roles...");
     await db.insert(jobRoles).values(sampleJobs);
+    console.log("✅ Job roles created!");
+
     console.log("✅ Database seeded successfully!");
+    console.log("\n🔑 Login credentials:");
+    console.log("   Admin: admin@example.com / password123");
+    console.log("   User: user@example.com / password123");
+    console.log("   User: john.doe@example.com / password123");
   } catch (error) {
     console.error("❌ Error seeding database:", error);
+    console.error(error);
+    process.exit(1);
   }
 }
 

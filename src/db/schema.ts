@@ -20,7 +20,7 @@ export const account = sqliteTable("account", {
   password: text("password").notNull(),
 });
 
-// Legacy users table (keeping for backward compatibility during migration)
+// Legacy users table - will be removed after migration to Better Auth
 export const users = sqliteTable("users", {
   id: integer("id").primaryKey({ autoIncrement: true }),
   email: text("email").notNull().unique(),
@@ -58,9 +58,9 @@ export type NewJobRole = typeof jobRoles.$inferInsert;
 
 export const applications = sqliteTable("applications", {
   id: integer("id").primaryKey({ autoIncrement: true }),
-  userId: integer("user_id")
+  userId: text("user_id")
     .notNull()
-    .references(() => users.id),
+    .references(() => user.id, { onDelete: "cascade" }),
   jobRoleId: integer("job_role_id")
     .notNull()
     .references(() => jobRoles.id),
