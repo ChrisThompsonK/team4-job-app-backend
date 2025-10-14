@@ -209,25 +209,35 @@ async function seed() {
       return Buffer.from(str).toString("base64");
     }
     const encodedPassword = base64Encode("password123");
+    const now = new Date().toISOString();
 
     const sampleUsers = [
       {
         email: "admin@example.com",
-        passwordHash: encodedPassword,
+        password: encodedPassword,
+        firstName: "Admin",
+        lastName: "User",
         role: "admin" as const,
-        createdAt: new Date().toISOString(),
+        createdAt: now,
+        updatedAt: now,
       },
       {
         email: "user@example.com",
-        passwordHash: encodedPassword,
+        password: encodedPassword,
+        firstName: "Regular",
+        lastName: "User",
         role: "user" as const,
-        createdAt: new Date().toISOString(),
+        createdAt: now,
+        updatedAt: now,
       },
       {
         email: "john.doe@example.com",
-        passwordHash: encodedPassword,
+        password: encodedPassword,
+        firstName: "John",
+        lastName: "Doe",
         role: "user" as const,
-        createdAt: new Date().toISOString(),
+        createdAt: now,
+        updatedAt: now,
       },
     ];
 
