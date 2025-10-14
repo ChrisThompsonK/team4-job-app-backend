@@ -2,6 +2,50 @@ import type { Request, Response } from "express";
 import { handleError } from "../errors/custom-errors.js";
 import { JobRoleService } from "../services/job-role-service.js";
 
+interface PaginationParams {
+  limit?: number;
+  offset?: number;
+}
+
+interface ParsedPaginationResult {
+  isValid: boolean;
+  error?: string;
+  params?: PaginationParams;
+}
+
+function parsePaginationParams(limit?: unknown, offset?: unknown): ParsedPaginationResult {
+  const params: PaginationParams = {};
+
+  // Validate and parse limit
+  if (limit !== undefined) {
+    const limitNum = parseInt(limit as string, 10);
+    if (Number.isNaN(limitNum) || limitNum < 1) {
+      return {
+        isValid: false,
+        error: "Invalid limit parameter. Must be a positive integer.",
+      };
+    }
+    params.limit = limitNum;
+  }
+
+  // Validate and parse offset
+  if (offset !== undefined) {
+    const offsetNum = parseInt(offset as string, 10);
+    if (Number.isNaN(offsetNum) || offsetNum < 0) {
+      return {
+        isValid: false,
+        error: "Invalid offset parameter. Must be a non-negative integer.",
+      };
+    }
+    params.offset = offsetNum;
+  }
+
+  return {
+    isValid: true,
+    params,
+  };
+}
+
 export class JobRoleController {
   private service: JobRoleService;
 
@@ -13,34 +57,16 @@ export class JobRoleController {
     try {
       // Parse query parameters for pagination
       const { limit, offset } = req.query;
+      const paginationResult = parsePaginationParams(limit, offset);
 
-      let parsedLimit: number | undefined;
-      let parsedOffset: number | undefined;
-
-      // Validate and parse limit
-      if (limit !== undefined) {
-        const limitNum = parseInt(limit as string, 10);
-        if (Number.isNaN(limitNum) || limitNum < 1) {
-          res.status(400).json({
-            error: "Invalid limit parameter. Must be a positive integer.",
-          });
-          return;
-        }
-        parsedLimit = limitNum;
+      if (!paginationResult.isValid) {
+        res.status(400).json({
+          error: paginationResult.error,
+        });
+        return;
       }
 
-      // Validate and parse offset
-      if (offset !== undefined) {
-        const offsetNum = parseInt(offset as string, 10);
-        if (Number.isNaN(offsetNum) || offsetNum < 0) {
-          res.status(400).json({
-            error: "Invalid offset parameter. Must be a non-negative integer.",
-          });
-          return;
-        }
-        parsedOffset = offsetNum;
-      }
-
+      const { limit: parsedLimit, offset: parsedOffset } = paginationResult.params || {};
       const jobs = await this.service.getAllJobRoles(parsedLimit, parsedOffset);
 
       res.json({
