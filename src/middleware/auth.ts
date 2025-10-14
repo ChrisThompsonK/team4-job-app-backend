@@ -1,15 +1,7 @@
 import type { NextFunction, Request, Response } from "express";
 import jwt from "jsonwebtoken";
-import type { PublicUser } from "../db/schema.js";
 
-// Extend the Request interface to include user
-declare global {
-  namespace Express {
-    interface Request {
-      user?: PublicUser;
-    }
-  }
-}
+const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key-change-in-production";
 
 export interface JwtPayload {
   userId: number;
@@ -17,7 +9,14 @@ export interface JwtPayload {
   role: string;
 }
 
-const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key-change-in-production";
+// Extend Express Request to include user
+declare global {
+  namespace Express {
+    interface Request {
+      user?: JwtPayload;
+    }
+  }
+}
 
 export const authenticateToken = (req: Request, res: Response, next: NextFunction): void => {
   const authHeader = req.headers.authorization;
@@ -30,38 +29,14 @@ export const authenticateToken = (req: Request, res: Response, next: NextFunctio
 
   try {
     const decoded = jwt.verify(token, JWT_SECRET) as JwtPayload;
-    req.user = {
-      id: decoded.userId,
-      email: decoded.email,
-      role: decoded.role as "admin" | "user",
-      firstName: "",
-      lastName: "",
-      createdAt: "",
-      updatedAt: "",
-    };
+    req.user = decoded;
     next();
   } catch (_error) {
     res.status(403).json({ error: "Invalid or expired token" });
   }
 };
 
-export const requireRole = (role: "admin" | "user") => {
-  return (req: Request, res: Response, next: NextFunction): void => {
-    if (!req.user) {
-      res.status(401).json({ error: "Authentication required" });
-      return;
-    }
-
-    if (req.user.role !== role && req.user.role !== "admin") {
-      res.status(403).json({ error: "Insufficient permissions" });
-      return;
-    }
-
-    next();
-  };
-};
-
-export const generateToken = (user: PublicUser): string => {
+export const generateToken = (user: { id: number; email: string; role: string }): string => {
   const payload: JwtPayload = {
     userId: user.id,
     email: user.email,
