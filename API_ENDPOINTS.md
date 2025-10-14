@@ -133,6 +133,41 @@
 ### 1. Get All Jobs
 **GET** `/api/jobs`
 
+**Query Parameters:**
+- `limit` (optional): Number of results to return (must be a positive integer)
+- `offset` (optional): Number of results to skip (must be a non-negative integer)
+
+**Example Requests:**
+- `/api/jobs` - Get all job roles
+- `/api/jobs?limit=10` - Get first 10 job roles
+- `/api/jobs?limit=10&offset=20` - Get 10 job roles, starting from the 21st result
+
+**Response (200):**
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "id": 1,
+      "name": "Software Engineer",
+      "location": "Belfast",
+      "capability": "Engineering",
+      "band": "Senior",
+      "closingDate": "2025-12-31T00:00:00.000Z",
+      "summary": "Job summary...",
+      "keyResponsibilities": "Responsibilities...",
+      "status": "open",
+      "numberOfOpenPositions": 5
+    }
+  ],
+  "count": 1,
+  "pagination": {
+    "limit": 10,
+    "offset": 0
+  }
+}
+```
+
 ### 2. Get Job by ID
 **GET** `/api/jobs/:id`
 

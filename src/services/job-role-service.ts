@@ -24,8 +24,8 @@ export class JobRoleService {
     this.validator = validator || new JobRoleValidator();
   }
 
-  async getAllJobRoles() {
-    const jobs = await this.repository.findAll();
+  async getAllJobRoles(limit?: number, offset?: number) {
+    const jobs = await this.repository.findAll(limit, offset);
 
     // Convert closingDate string to Date object for frontend
     return jobs.map((job) => ({

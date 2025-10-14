@@ -4,8 +4,22 @@ import type { NewJobRole } from "../db/schema.js";
 import { jobRoles } from "../db/schema.js";
 
 export class JobRoleRepository {
-  async findAll() {
-    return await db.select().from(jobRoles).orderBy(jobRoles.id);
+  async findAll(limit?: number, offset?: number) {
+    const query = db.select().from(jobRoles).orderBy(jobRoles.id);
+
+    if (limit !== undefined && offset !== undefined) {
+      return await query.limit(limit).offset(offset);
+    }
+
+    if (limit !== undefined) {
+      return await query.limit(limit);
+    }
+
+    if (offset !== undefined) {
+      return await query.offset(offset);
+    }
+
+    return await query;
   }
 
   async findById(id: number) {
