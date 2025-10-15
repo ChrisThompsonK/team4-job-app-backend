@@ -1,5 +1,6 @@
 import type { NewJobRole } from "../db/schema.js";
-import { ValidationError } from "../errors/custom-errors.js";
+import { ConflictError, NotFoundError, ValidationError } from "../errors/custom-errors.js";
+import { ApplicationRepository } from "../repositories/application-repository.js";
 import { JobRoleRepository } from "../repositories/job-role-repository.js";
 import { JobRoleValidator } from "../validators/job-role-validator.js";
 
@@ -32,17 +33,23 @@ interface DeleteJobRoleResult {
   job: {
     id: number;
     name: string;
-  } | null;
+  };
   deletedApplicationsCount: number;
 }
 
 export class JobRoleService {
   private repository: JobRoleRepository;
   private validator: JobRoleValidator;
+  private applicationRepository: ApplicationRepository;
 
-  constructor(repository?: JobRoleRepository, validator?: JobRoleValidator) {
+  constructor(
+    repository?: JobRoleRepository,
+    validator?: JobRoleValidator,
+    applicationRepository?: ApplicationRepository
+  ) {
     this.repository = repository || new JobRoleRepository();
     this.validator = validator || new JobRoleValidator();
+    this.applicationRepository = applicationRepository || new ApplicationRepository();
   }
 
   async getAllJobRoles(limit?: number, offset?: number) {
@@ -126,7 +133,7 @@ export class JobRoleService {
     // First check if job exists before attempting update
     const existingJob = await this.repository.findById(id);
     if (!existingJob) {
-      return null;
+      throw new NotFoundError(`Job role with ID ${id} not found`);
     }
 
     // Validate input if any fields are provided
@@ -142,6 +149,19 @@ export class JobRoleService {
       }
 
       const { status, numberOfOpenPositions, formattedClosingDate } = validationResult.value;
+
+      // Business rule: If changing status to closed, ensure no active applications
+      if (status === "closed" && existingJob.status === "open") {
+        const applications = await this.applicationRepository.findByJobRoleId(id);
+        const activeApplications = applications.filter((app) => app.status === "in progress");
+
+        if (activeApplications.length > 0) {
+          throw new ConflictError(
+            `Cannot close job role with ${activeApplications.length} active application(s). ` +
+              `Please process all applications before closing the position.`
+          );
+        }
+      }
 
       // Prepare update data
       const updateData: Partial<typeof existingJob> = {};
@@ -179,15 +199,24 @@ export class JobRoleService {
     };
   }
 
-  async deleteJobRole(id: number): Promise<DeleteJobRoleResult> {
+  async deleteJobRole(id: number, forceDelete: boolean = false): Promise<DeleteJobRoleResult> {
     // First check if job exists before attempting deletion
     const existingJob = await this.repository.findById(id);
     if (!existingJob) {
-      return {
-        success: false,
-        job: null,
-        deletedApplicationsCount: 0,
-      };
+      throw new NotFoundError(`Job role with ID ${id} not found`);
+    }
+
+    // Business rule validation: Check for active applications
+    if (!forceDelete) {
+      const applications = await this.applicationRepository.findByJobRoleId(id);
+      const activeApplications = applications.filter((app) => app.status === "in progress");
+
+      if (activeApplications.length > 0) {
+        throw new ConflictError(
+          `Cannot delete job role with ${activeApplications.length} active application(s). ` +
+            `Please process all applications before deletion or use force delete.`
+        );
+      }
     }
 
     try {
@@ -195,11 +224,7 @@ export class JobRoleService {
       const result = await this.repository.deleteWithApplications(id);
 
       if (!result.job) {
-        return {
-          success: false,
-          job: null,
-          deletedApplicationsCount: 0,
-        };
+        throw new Error("Failed to delete job role - job not found during deletion");
       }
 
       return {
@@ -211,6 +236,9 @@ export class JobRoleService {
         deletedApplicationsCount: result.deletedApplicationsCount,
       };
     } catch (error) {
+      if (error instanceof ConflictError || error instanceof NotFoundError) {
+        throw error;
+      }
       throw new Error(
         `Failed to delete job role: ${error instanceof Error ? error.message : "Unknown error"}`
       );
