@@ -44,18 +44,18 @@ app.get("/", (_req, res) => {
       // Better Auth direct API (optional)
       betterAuthAPI: "/api/better-auth/*",
 
-      // Job endpoints
-      jobs: "/api/jobs",
-      jobById: "/api/jobs/:id",
-      jobsByStatus: "/api/jobs/status/:status",
+      // Job endpoints (no authentication required)
+      jobs: "GET /api/jobs",
+      jobById: "GET /api/jobs/:id",
+      jobsByStatus: "GET /api/jobs/status/:status",
       createJob: "POST /api/jobs",
 
-      // Application endpoints
-      applications: "/api/applications",
+      // Application endpoints (all require JWT token)
+      applications: "GET /api/applications (requires JWT token)",
       createApplication: "POST /api/applications (requires JWT token)",
-      applicationById: "/api/applications/:id (requires JWT token)",
-      applicationsByJobRole: "/api/applications/job/:jobRoleId (requires JWT token)",
-      hireApplicant: "PUT /api/applications/:id/hire (requires JWT token)",
+      applicationById: "GET /api/applications/:id (requires JWT token)",
+      applicationsByJobRole: "GET /api/applications/job/:jobRoleId (requires JWT token)",
+      hireApplicant: "PUT /api/applications/:id/hire",
       rejectApplicant: "PUT /api/applications/:id/reject (requires JWT token)",
     },
   });

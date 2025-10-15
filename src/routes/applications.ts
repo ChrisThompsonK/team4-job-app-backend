@@ -14,8 +14,8 @@ router.get("/:id", authenticateToken, controller.getApplicationById);
 // GET /api/applications/job/:jobRoleId - Get all applications for a job role (admin only)
 router.get("/job/:jobRoleId", authenticateToken, controller.getApplicationsByJobRole);
 
-// PUT /api/applications/:id/hire - Hire an applicant (admin only)
-router.put("/:id/hire", authenticateToken, controller.hireApplicant);
+// PUT /api/applications/:id/hire - Hire an applicant (no authentication required)
+router.put("/:id/hire", controller.hireApplicant);
 
 // PUT /api/applications/:id/reject - Reject an applicant (admin only)
 router.put("/:id/reject", authenticateToken, controller.rejectApplicant);
