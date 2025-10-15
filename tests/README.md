@@ -4,6 +4,21 @@ This directory contains integration test scripts for manually testing the API en
 
 ## Available Tests
 
+### `test-auth.js`
+Tests the authentication system including login, registration, and token validation with all seeded user accounts.
+
+**Run with:**
+```bash
+node tests/test-auth.js
+```
+
+**What it tests:**
+- Login with admin, member, and user accounts
+- JWT token generation and validation
+- `/me` endpoint functionality
+- User registration
+- Invalid credential handling
+
 ### `test-application.js`
 Tests the job application API endpoints including authentication, job retrieval, application submission, and validation.
 
@@ -36,12 +51,25 @@ npm run dev
 
 2. In another terminal, run the tests:
 ```bash
+# Test authentication system
+node tests/test-auth.js
+
 # Test job applications
 node tests/test-application.js
 
 # Test job creation
 node tests/test-create-job.js
 ```
+
+## Frontend Integration
+
+The authentication test provides the exact credentials needed for frontend testing:
+
+- **Admin**: `admin@example.com` / `password123`
+- **Member**: `member@example.com` / `password123`
+- **User**: `john.doe@example.com` / `password123`
+
+Use these credentials in your frontend login form to test the authentication flow.
 
 ## Notes
 

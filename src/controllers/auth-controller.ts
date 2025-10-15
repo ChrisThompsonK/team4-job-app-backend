@@ -1,202 +1,142 @@
 import bcrypt from "bcryptjs";
 import type { Request, Response } from "express";
 import { handleError } from "../errors/custom-errors.js";
-import { auth } from "../lib/auth.js";
 import { generateToken } from "../middleware/auth.js";
+import { userRepository } from "../repositories/user-repository.js";
 
 export class AuthController {
-  async login(req: Request, res: Response): Promise<void> {
-    try {
-      const { email, password } = req.body;
-
-      if (!email || !password) {
-        res.status(400).json({ error: "Email and password are required" });
-        return;
-      }
-
-      // Try Better Auth first
-      try {
-        const session = await auth.api.signInEmail({
-          body: { email, password },
-          headers: req.headers as Record<string, string>,
-        });
-
-        if (session?.token) {
-          // Generate JWT token for compatibility
-          const token = generateToken({
-            id: parseInt(session.user.id, 10),
-            email: session.user.email,
-            role: "user", // Default role since Better Auth doesn't have role by default
-          });
-
-          const [firstName, lastName] = session.user.name.split(" ");
-
-          res.status(200).json({
-            message: "Login successful",
-            token,
-            user: {
-              id: session.user.id,
-              email: session.user.email,
-              role: "user",
-              firstName: firstName || "",
-              lastName: lastName || "",
-            },
-            betterAuthSession: session.token,
-          });
-          return;
-        }
-      } catch (betterAuthError) {
-        console.log("Better Auth failed, trying fallback:", betterAuthError);
-      }
-
-      // Fallback to hardcoded users for demo purposes
-      const users = [
-        {
-          id: 1,
-          email: "admin@example.com",
-          password: await bcrypt.hash("password123", 12),
-          role: "admin",
-          firstName: "Admin",
-          lastName: "User",
-        },
-        {
-          id: 2,
-          email: "user@example.com",
-          password: await bcrypt.hash("password123", 12),
-          role: "user",
-          firstName: "Regular",
-          lastName: "User",
-        },
-      ];
-
-      const user = users.find((u) => u.email === email);
-
-      if (!user) {
-        res.status(401).json({ error: "Invalid email or password" });
-        return;
-      }
-
-      const isPasswordValid = await bcrypt.compare(password, user.password);
-
-      if (!isPasswordValid) {
-        res.status(401).json({ error: "Invalid email or password" });
-        return;
-      }
-
-      const token = generateToken({
-        id: user.id,
-        email: user.email,
-        role: user.role,
-      });
-
-      res.status(200).json({
-        message: "Login successful",
-        token,
-        user: {
-          id: user.id,
-          email: user.email,
-          role: user.role,
-          firstName: user.firstName,
-          lastName: user.lastName,
-        },
-      });
-    } catch (error) {
-      handleError(error, res, "Failed to login");
-    }
-  }
-
-  async register(req: Request, res: Response): Promise<void> {
-    try {
-      const { email, password, firstName, lastName } = req.body;
-
-      if (!email || !password || !firstName || !lastName) {
-        res.status(400).json({
-          error: "Email, password, first name, and last name are required",
-        });
-        return;
-      }
-
-      // Use Better Auth for registration
-      const result = await auth.api.signUpEmail({
-        body: {
-          email,
-          password,
-          name: `${firstName} ${lastName}`,
-        },
-        headers: req.headers as Record<string, string>,
-      });
-
-      if (result?.user) {
-        // Generate JWT token for compatibility
-        const token = generateToken({
-          id: parseInt(result.user.id, 10),
-          email: result.user.email,
-          role: "user", // Default role
-        });
-
-        const [userFirstName, userLastName] = result.user.name.split(" ");
-
-        res.status(201).json({
-          message: "User registered successfully",
-          token,
-          user: {
-            id: result.user.id,
-            email: result.user.email,
-            role: "user",
-            firstName: userFirstName || firstName,
-            lastName: userLastName || lastName,
-          },
-          betterAuthSession: result.token,
-        });
-      } else {
-        res.status(400).json({ error: "Registration failed" });
-      }
-    } catch (error) {
-      handleError(error, res, "Failed to register");
-    }
-  }
-
-  async me(req: Request, res: Response): Promise<void> {
-    try {
-      if (!req.user) {
-        res.status(401).json({ error: "User not authenticated" });
-        return;
-      }
-
-      res.status(200).json({
-        user: req.user,
-      });
-    } catch (error) {
-      handleError(error, res, "Failed to get current user");
-    }
-  }
-
-  async logout(req: Request, res: Response): Promise<void> {
-    try {
-      // Try to logout from Better Auth if session token is provided
-      const sessionToken =
-        req.headers.authorization?.split(" ")[1] || (req.headers["x-session-token"] as string);
-
-      if (sessionToken) {
+    async login(req: Request, res: Response): Promise<void> {
         try {
-          await auth.api.signOut({
-            headers: {
-              ...(req.headers as Record<string, string>),
-              authorization: `Bearer ${sessionToken}`,
-            },
-          });
-        } catch (betterAuthError) {
-          console.log("Better Auth logout failed:", betterAuthError);
-        }
-      }
+            const { email, password } = req.body;
 
-      res.status(200).json({
-        message: "Logout successful",
-      });
-    } catch (error) {
-      handleError(error, res, "Failed to logout");
+            if (!email || !password) {
+                res.status(400).json({ error: "Email and password are required" });
+                return;
+            }
+
+            // Find user in database
+            const user = await userRepository.findByEmail(email);
+
+            if (!user) {
+                res.status(401).json({ error: "Invalid email or password" });
+                return;
+            }
+
+            // Validate password
+            const isPasswordValid = await bcrypt.compare(password, user.password);
+
+            if (!isPasswordValid) {
+                res.status(401).json({ error: "Invalid email or password" });
+                return;
+            }
+
+            // Generate JWT token
+            const token = generateToken({
+                id: user.id,
+                email: user.email,
+                role: user.role,
+            });
+
+            res.status(200).json({
+                message: "Login successful",
+                token,
+                user: {
+                    id: user.id,
+                    email: user.email,
+                    role: user.role,
+                    firstName: user.firstName,
+                    lastName: user.lastName,
+                },
+            });
+        } catch (error) {
+            handleError(error, res, "Failed to login");
+        }
     }
-  }
+
+    async register(req: Request, res: Response): Promise<void> {
+        try {
+            const { email, password, firstName, lastName, role } = req.body;
+
+            if (!email || !password || !firstName || !lastName) {
+                res.status(400).json({
+                    error: "Email, password, first name, and last name are required",
+                });
+                return;
+            }
+
+            // Check if user already exists
+            const existingUser = await userRepository.findByEmail(email);
+            if (existingUser) {
+                res.status(409).json({ error: "User with this email already exists" });
+                return;
+            }
+
+            // Hash password
+            const hashedPassword = await bcrypt.hash(password, 12);
+
+            // Create user
+            const userData = {
+                email,
+                password: hashedPassword,
+                firstName,
+                lastName,
+                role: role || "user", // Default to "user" if no role specified
+                createdAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString(),
+            };
+
+            const user = await userRepository.createUser(userData);
+
+            // Generate JWT token
+            const token = generateToken({
+                id: user.id,
+                email: user.email,
+                role: user.role,
+            });
+
+            res.status(201).json({
+                message: "User registered successfully",
+                token,
+                user: {
+                    id: user.id,
+                    email: user.email,
+                    role: user.role,
+                    firstName: user.firstName,
+                    lastName: user.lastName,
+                },
+            });
+        } catch (error) {
+            handleError(error, res, "Failed to register");
+        }
+    }
+
+    async me(req: Request, res: Response): Promise<void> {
+        try {
+            if (!req.user) {
+                res.status(401).json({ error: "User not authenticated" });
+                return;
+            }
+
+            res.status(200).json({
+                user: req.user,
+            });
+        } catch (error) {
+            handleError(error, res, "Failed to get current user");
+        }
+    }
+
+    async logout(req: Request, res: Response): Promise<void> {
+        try {
+            // For JWT-based authentication, logout is primarily handled on the client side
+            // by removing the token. We can implement token blacklisting here if needed.
+
+            res.status(200).json({
+                message: "Logout successful",
+            });
+        } catch (error) {
+            handleError(error, res, "Failed to logout");
+        }
+    }
 }
 
 export const authController = new AuthController();

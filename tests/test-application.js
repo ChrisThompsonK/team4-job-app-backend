@@ -15,7 +15,7 @@ async function testApplicationAPI() {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        email: "user@example.com",
+        email: "member@example.com", // Use correct seeded email
         password: "password123",
       }),
     });
@@ -24,6 +24,10 @@ async function testApplicationAPI() {
 
     if (!loginData.token) {
       console.log("   ✗ Failed to login:", loginData.error);
+      console.log("   Available test users:");
+      console.log("   - admin@example.com / password123 (admin)");
+      console.log("   - member@example.com / password123 (user)");
+      console.log("   - john.doe@example.com / password123 (user)");
       return;
     }
 
