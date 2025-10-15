@@ -1,5 +1,5 @@
 // Test script to demonstrate the job application API
-// Run this with: node test-application.js
+// Run this with: node tests/test-application.js
 
 const API_URL = "http://localhost:3001";
 
@@ -33,7 +33,7 @@ async function testApplicationAPI() {
       Authorization: `Bearer ${authToken}`,
     };
 
-    console.log(`   ✓ Logged in successfully as ${loginData.user.email}`);
+    console.log(`   ✓ Logged in successfully`);
     console.log(`   User ID: ${loginData.user.id}\n`);
 
     // 1. Get all jobs to find an open one
