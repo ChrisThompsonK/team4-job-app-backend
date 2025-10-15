@@ -1,5 +1,6 @@
+// import bcrypt from "bcrypt";
 import { db } from "./index.js";
-import { type JobRoleStatus, jobRoles } from "./schema.js";
+import { type JobRoleStatus, jobRoles, users } from "./schema.js";
 
 const sampleJobs = [
   {
@@ -203,6 +204,49 @@ async function seed() {
   console.log("🌱 Seeding database...");
 
   try {
+    // Create sample users with base64 encoded passwords (for demo only)
+    function base64Encode(str: string): string {
+      return Buffer.from(str).toString("base64");
+    }
+    const encodedPassword = base64Encode("password123");
+    const now = new Date().toISOString();
+
+    const sampleUsers = [
+      {
+        email: "admin@example.com",
+        password: encodedPassword,
+        firstName: "Admin",
+        lastName: "User",
+        role: "admin" as const,
+        createdAt: now,
+        updatedAt: now,
+      },
+      {
+        email: "user@example.com",
+        password: encodedPassword,
+        firstName: "Regular",
+        lastName: "User",
+        role: "user" as const,
+        createdAt: now,
+        updatedAt: now,
+      },
+      {
+        email: "john.doe@example.com",
+        password: encodedPassword,
+        firstName: "John",
+        lastName: "Doe",
+        role: "user" as const,
+        createdAt: now,
+        updatedAt: now,
+      },
+    ];
+
+    await db.insert(users).values(sampleUsers);
+    console.log("✅ Sample users created!");
+    console.log("   - admin@example.com (password: password123)");
+    console.log("   - user@example.com (password: password123)");
+    console.log("   - john.doe@example.com (password: password123)");
+
     await db.insert(jobRoles).values(sampleJobs);
     console.log("✅ Database seeded successfully!");
   } catch (error) {

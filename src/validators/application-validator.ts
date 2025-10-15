@@ -51,7 +51,29 @@ export class ApplicationValidator {
     };
   }
 
-  validateApplication(data: { jobRoleId: number; cvText: string }): ValidationResult {
+  validateUserId(userId: number): ValidationResult {
+    const errors: ValidationError[] = [];
+
+    if (!userId || !Number.isInteger(userId) || userId <= 0) {
+      errors.push({
+        field: "userId",
+        message: "Valid user ID is required",
+      });
+    }
+
+    return {
+      isValid: errors.length === 0,
+      errors,
+    };
+  }
+
+  validateApplication(data: {
+    userId: number;
+    jobRoleId: number;
+    cvText: string;
+  }): ValidationResult {
+    // Note: userId validation is removed since it now comes from authentication
+    // and is guaranteed to be valid by the auth middleware
     const jobRoleIdValidation = this.validateJobRoleId(data.jobRoleId);
     const cvTextValidation = this.validateCvText(data.cvText);
 
