@@ -1,7 +1,7 @@
 import { eq, sql } from "drizzle-orm";
 import { db } from "../db/index.js";
-import type { NewJobRole } from "../db/schema.js";
-import { jobRoles } from "../db/schema.js";
+import type { JobRole, NewJobRole } from "../db/schema.js";
+import { applications, jobRoles } from "../db/schema.js";
 
 export class JobRoleRepository {
   async findAll(limit?: number, offset?: number) {
@@ -48,5 +48,45 @@ export class JobRoleRepository {
   async count() {
     const result = await db.select({ count: sql<number>`count(*)` }).from(jobRoles);
     return result[0]?.count || 0;
+  }
+
+  async update(id: number, updates: Partial<Omit<JobRole, "id">>) {
+    const result = await db.update(jobRoles).set(updates).where(eq(jobRoles.id, id)).returning();
+    return result[0] || null;
+  }
+
+  async delete(id: number) {
+    const result = await db.delete(jobRoles).where(eq(jobRoles.id, id)).returning();
+    return result[0] || null;
+  }
+
+  async deleteWithApplications(id: number) {
+    return await db.transaction(async (tx) => {
+      // First, get the job role to return it
+      const jobRole = await tx.select().from(jobRoles).where(eq(jobRoles.id, id)).limit(1);
+
+      if (!jobRole[0]) {
+        return { job: null, deletedApplicationsCount: 0 };
+      }
+
+      // Count applications before deletion
+      const applicationCountResult = await tx
+        .select({ count: sql<number>`count(*)` })
+        .from(applications)
+        .where(eq(applications.jobRoleId, id));
+
+      const applicationCount = applicationCountResult[0]?.count || 0;
+
+      // Delete all applications for this job role first
+      await tx.delete(applications).where(eq(applications.jobRoleId, id));
+
+      // Then delete the job role
+      await tx.delete(jobRoles).where(eq(jobRoles.id, id));
+
+      return {
+        job: jobRole[0],
+        deletedApplicationsCount: applicationCount,
+      };
+    });
   }
 }

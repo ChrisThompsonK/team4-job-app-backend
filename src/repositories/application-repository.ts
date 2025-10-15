@@ -1,4 +1,4 @@
-import { desc, eq } from "drizzle-orm";
+import { desc, eq, sql } from "drizzle-orm";
 import { db } from "../db/index.js";
 import type { ApplicationStatus, NewApplication } from "../db/schema.js";
 import { applications, jobRoles } from "../db/schema.js";
@@ -42,5 +42,21 @@ export class ApplicationRepository {
       .where(eq(applications.id, id))
       .limit(1);
     return result[0] || null;
+  }
+
+  async deleteByJobRoleId(jobRoleId: number) {
+    const result = await db
+      .delete(applications)
+      .where(eq(applications.jobRoleId, jobRoleId))
+      .returning();
+    return result;
+  }
+
+  async countByJobRoleId(jobRoleId: number) {
+    const result = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(applications)
+      .where(eq(applications.jobRoleId, jobRoleId));
+    return result[0]?.count || 0;
   }
 }
