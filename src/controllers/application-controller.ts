@@ -11,21 +11,11 @@ export class ApplicationController {
 
   createApplication = async (req: Request, res: Response): Promise<void> => {
     try {
-      const { jobRoleId, cvText } = req.body;
+      const { jobRoleId, cvText, userId } = req.body;
 
-      // Get userId from authenticated user
-      const userId = req.user?.userId;
-
-      if (!userId) {
-        res.status(401).json({
-          error: "User authentication required",
-        });
-        return;
-      }
-
-      if (!jobRoleId || !cvText) {
+      if (!userId || !jobRoleId || !cvText) {
         res.status(400).json({
-          error: "Job role ID, CV text, and user ID are required",
+          error: "User ID, job role ID, and CV text are required",
         });
         return;
       }

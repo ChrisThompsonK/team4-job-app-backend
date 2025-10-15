@@ -50,13 +50,13 @@ app.get("/", (_req, res) => {
       jobsByStatus: "GET /api/jobs/status/:status",
       createJob: "POST /api/jobs",
 
-      // Application endpoints (all require JWT token)
-      applications: "GET /api/applications (requires JWT token)",
-      createApplication: "POST /api/applications (requires JWT token)",
-      applicationById: "GET /api/applications/:id (requires JWT token)",
-      applicationsByJobRole: "GET /api/applications/job/:jobRoleId (requires JWT token)",
+      // Application endpoints (no authentication required)
+      applications: "GET /api/applications",
+      createApplication: "POST /api/applications",
+      applicationById: "GET /api/applications/:id",
+      applicationsByJobRole: "GET /api/applications/job/:jobRoleId",
       hireApplicant: "PUT /api/applications/:id/hire",
-      rejectApplicant: "PUT /api/applications/:id/reject (requires JWT token)",
+      rejectApplicant: "PUT /api/applications/:id/reject",
     },
   });
 }); // Start the server
