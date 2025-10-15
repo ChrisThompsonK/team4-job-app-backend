@@ -11,7 +11,7 @@ export class ApplicationController {
 
   createApplication = async (req: Request, res: Response): Promise<void> => {
     try {
-      const { jobRoleId, cvText } = req.body;
+      const { jobRoleId, cvText, userId } = req.body;
 
       // Get userId from authenticated user
       const userId = req.user?.userId;
@@ -25,7 +25,7 @@ export class ApplicationController {
 
       if (!jobRoleId || !cvText) {
         res.status(400).json({
-          error: "Job role ID and CV text are required",
+          error: "Job role ID, CV text, and user ID are required",
         });
         return;
       }

@@ -59,6 +59,7 @@ async function testApplicationAPI() {
     // 3. Submit an application (userId is now automatically determined from auth token)
     console.log("3. Submitting application...");
     const applicationData = {
+      userId: 1, // Temporary hardcoded user ID until authentication is implemented
       jobRoleId: openJob.id,
       cvText:
         "I am a highly motivated software engineer with 5 years of experience in full-stack development. My expertise includes TypeScript, Node.js, React, and SQL databases. I have led multiple successful projects and am passionate about writing clean, maintainable code. I am excited about this opportunity to contribute to your team.",

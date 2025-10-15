@@ -77,7 +77,11 @@ export class ApplicationValidator {
     const jobRoleIdValidation = this.validateJobRoleId(data.jobRoleId);
     const cvTextValidation = this.validateCvText(data.cvText);
 
-    const allErrors = [...jobRoleIdValidation.errors, ...cvTextValidation.errors];
+    const allErrors = [
+      ...userIdValidation.errors,
+      ...jobRoleIdValidation.errors,
+      ...cvTextValidation.errors,
+    ];
 
     return {
       isValid: allErrors.length === 0,
