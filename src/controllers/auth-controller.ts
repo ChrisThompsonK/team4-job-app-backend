@@ -21,10 +21,10 @@ export class AuthController {
           headers: req.headers as Record<string, string>,
         });
 
-        if (session && session.token) {
+        if (session?.token) {
           // Generate JWT token for compatibility
           const token = generateToken({
-            id: parseInt(session.user.id),
+            id: parseInt(session.user.id, 10),
             email: session.user.email,
             role: "user", // Default role since Better Auth doesn't have role by default
           });
@@ -126,10 +126,10 @@ export class AuthController {
         headers: req.headers as Record<string, string>,
       });
 
-      if (result && result.user) {
+      if (result?.user) {
         // Generate JWT token for compatibility
         const token = generateToken({
-          id: parseInt(result.user.id),
+          id: parseInt(result.user.id, 10),
           email: result.user.email,
           role: "user", // Default role
         });
