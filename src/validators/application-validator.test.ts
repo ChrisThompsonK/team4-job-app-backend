@@ -135,7 +135,7 @@ describe("ApplicationValidator", () => {
 
     it("should return all errors when both fields are invalid", () => {
       const invalidData = {
-        userId: 0,
+        userId: 0, // This won't be validated anymore since it comes from auth
         jobRoleId: 0,
         cvText: "Short",
       };
@@ -143,8 +143,7 @@ describe("ApplicationValidator", () => {
       const result = validator.validateApplication(invalidData);
 
       expect(result.isValid).toBe(false);
-      expect(result.errors).toHaveLength(3);
-      expect(result.errors.some((e) => e.field === "userId")).toBe(true);
+      expect(result.errors).toHaveLength(2); // Only jobRoleId and cvText errors
       expect(result.errors.some((e) => e.field === "jobRoleId")).toBe(true);
       expect(result.errors.some((e) => e.field === "cvText")).toBe(true);
     });

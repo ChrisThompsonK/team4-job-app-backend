@@ -2,7 +2,7 @@
  * Test script for creating a new job via the POST /api/jobs endpoint
  *
  * Run this after starting the backend server:
- * node test-create-job.js
+ * node tests/test-create-job.js
  */
 
 const API_URL = "http://localhost:3001/api/jobs";
