@@ -10,6 +10,18 @@ interface CreateJobRoleInput {
   numberOfOpenPositions?: number;
 }
 
+interface UpdateJobRoleInput {
+  name?: string;
+  location?: string;
+  capability?: string;
+  band?: string;
+  closingDate?: string;
+  summary?: string;
+  keyResponsibilities?: string;
+  status?: "open" | "closed";
+  numberOfOpenPositions?: number;
+}
+
 interface ValidationResult {
   isValid: boolean;
   error?: string;
@@ -20,7 +32,29 @@ interface ValidationResult {
   };
 }
 
+interface UpdateValidationResult {
+  isValid: boolean;
+  error?: string;
+  value?: {
+    status?: "open" | "closed";
+    numberOfOpenPositions?: number;
+    formattedClosingDate?: string;
+  };
+}
+
 export class JobRoleValidator {
+  validateOptionalStringField(value?: string, fieldName?: string): ValidationResult {
+    if (value !== undefined) {
+      if (typeof value !== "string" || value.trim().length === 0) {
+        return {
+          isValid: false,
+          error: `${fieldName || "Field"} must be a non-empty string`,
+        };
+      }
+    }
+    return { isValid: true };
+  }
+
   validateRequiredFields(input: CreateJobRoleInput): ValidationResult {
     if (
       !input.name ||
@@ -140,6 +174,84 @@ export class JobRoleValidator {
         numberOfOpenPositions: positionsResult.value.numberOfOpenPositions,
         formattedClosingDate: closingDateResult.value.formattedClosingDate,
       },
+    };
+  }
+
+  validateUpdateJobRole(input: UpdateJobRoleInput): UpdateValidationResult {
+    // If no fields provided, return early
+    if (Object.keys(input).length === 0) {
+      return {
+        isValid: false,
+        error: "At least one field must be provided for update",
+      };
+    }
+
+    // Validate individual optional fields
+    const fieldValidations = [
+      { field: input.name, name: "name" },
+      { field: input.location, name: "location" },
+      { field: input.capability, name: "capability" },
+      { field: input.band, name: "band" },
+      { field: input.summary, name: "summary" },
+      { field: input.keyResponsibilities, name: "keyResponsibilities" },
+    ];
+
+    for (const { field, name } of fieldValidations) {
+      const result = this.validateOptionalStringField(field, name);
+      if (!result.isValid) {
+        return result;
+      }
+    }
+
+    // Validate status if provided
+    let validatedStatus: "open" | "closed" | undefined;
+    if (input.status !== undefined) {
+      const statusResult = this.validateStatus(input.status);
+      if (!statusResult.isValid) {
+        return statusResult;
+      }
+      validatedStatus = statusResult.value?.status;
+    }
+
+    // Validate numberOfOpenPositions if provided
+    let validatedPositions: number | undefined;
+    if (input.numberOfOpenPositions !== undefined) {
+      const positionsResult = this.validateNumberOfOpenPositions(input.numberOfOpenPositions);
+      if (!positionsResult.isValid) {
+        return positionsResult;
+      }
+      validatedPositions = positionsResult.value?.numberOfOpenPositions;
+    }
+
+    // Validate closing date if provided
+    let validatedClosingDate: string | undefined;
+    if (input.closingDate !== undefined) {
+      const closingDateResult = this.validateClosingDate(input.closingDate);
+      if (!closingDateResult.isValid) {
+        return closingDateResult;
+      }
+      validatedClosingDate = closingDateResult.value?.formattedClosingDate;
+    }
+
+    const result: {
+      status?: "open" | "closed";
+      numberOfOpenPositions?: number;
+      formattedClosingDate?: string;
+    } = {};
+
+    if (validatedStatus !== undefined) {
+      result.status = validatedStatus;
+    }
+    if (validatedPositions !== undefined) {
+      result.numberOfOpenPositions = validatedPositions;
+    }
+    if (validatedClosingDate !== undefined) {
+      result.formattedClosingDate = validatedClosingDate;
+    }
+
+    return {
+      isValid: true,
+      value: result,
     };
   }
 }

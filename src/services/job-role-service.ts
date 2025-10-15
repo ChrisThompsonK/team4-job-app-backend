@@ -15,6 +15,27 @@ interface CreateJobRoleInput {
   numberOfOpenPositions?: number;
 }
 
+interface UpdateJobRoleInput {
+  name?: string;
+  location?: string;
+  capability?: string;
+  band?: string;
+  closingDate?: string;
+  summary?: string;
+  keyResponsibilities?: string;
+  status?: "open" | "closed";
+  numberOfOpenPositions?: number;
+}
+
+interface DeleteJobRoleResult {
+  success: boolean;
+  job: {
+    id: number;
+    name: string;
+  } | null;
+  deletedApplicationsCount: number;
+}
+
 export class JobRoleService {
   private repository: JobRoleRepository;
   private validator: JobRoleValidator;
@@ -99,5 +120,100 @@ export class JobRoleService {
       ...createdJob,
       closingDate: new Date(createdJob.closingDate),
     };
+  }
+
+  async updateJobRole(id: number, input: UpdateJobRoleInput) {
+    // First check if job exists before attempting update
+    const existingJob = await this.repository.findById(id);
+    if (!existingJob) {
+      return null;
+    }
+
+    // Validate input if any fields are provided
+    if (Object.keys(input).length > 0) {
+      const validationResult = this.validator.validateUpdateJobRole(input);
+
+      if (!validationResult.isValid) {
+        throw new ValidationError(validationResult.error || "Validation failed");
+      }
+
+      if (!validationResult.value) {
+        throw new ValidationError("Validation passed but no value returned");
+      }
+
+      const { status, numberOfOpenPositions, formattedClosingDate } = validationResult.value;
+
+      // Prepare update data
+      const updateData: Partial<typeof existingJob> = {};
+
+      if (input.name !== undefined) updateData.name = input.name;
+      if (input.location !== undefined) updateData.location = input.location;
+      if (input.capability !== undefined) updateData.capability = input.capability;
+      if (input.band !== undefined) updateData.band = input.band;
+      if (input.summary !== undefined) updateData.summary = input.summary;
+      if (input.keyResponsibilities !== undefined)
+        updateData.keyResponsibilities = input.keyResponsibilities;
+      if (status !== undefined) updateData.status = status;
+      if (numberOfOpenPositions !== undefined)
+        updateData.numberOfOpenPositions = numberOfOpenPositions;
+      if (formattedClosingDate !== undefined) updateData.closingDate = formattedClosingDate;
+
+      // Update the job role
+      const updatedJob = await this.repository.update(id, updateData);
+
+      if (!updatedJob) {
+        throw new Error("Failed to update job role");
+      }
+
+      // Convert closingDate string to Date object for frontend
+      return {
+        ...updatedJob,
+        closingDate: new Date(updatedJob.closingDate),
+      };
+    }
+
+    // If no fields to update, return existing job
+    return {
+      ...existingJob,
+      closingDate: new Date(existingJob.closingDate),
+    };
+  }
+
+  async deleteJobRole(id: number): Promise<DeleteJobRoleResult> {
+    // First check if job exists before attempting deletion
+    const existingJob = await this.repository.findById(id);
+    if (!existingJob) {
+      return {
+        success: false,
+        job: null,
+        deletedApplicationsCount: 0,
+      };
+    }
+
+    try {
+      // Use transaction-based cascade deletion
+      const result = await this.repository.deleteWithApplications(id);
+
+      if (!result.job) {
+        return {
+          success: false,
+          job: null,
+          deletedApplicationsCount: 0,
+        };
+      }
+
+      return {
+        success: true,
+        job: {
+          id: result.job.id,
+          name: result.job.name,
+        },
+        deletedApplicationsCount: result.deletedApplicationsCount,
+      };
+    } catch (error) {
+      throw new Error(
+        `Failed to delete job role: ${error instanceof Error ? error.message : "Unknown error"}`
+      );
+    }
   }
 }
