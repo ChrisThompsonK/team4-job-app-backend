@@ -11,7 +11,7 @@ export class ApplicationController {
 
   createApplication = async (req: Request, res: Response): Promise<void> => {
     try {
-      const { jobRoleId, cvText, userId } = req.body;
+      const { jobRoleId, cvText } = req.body;
 
       // Get userId from authenticated user
       const userId = req.user?.userId;
