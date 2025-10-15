@@ -169,11 +169,45 @@ See **[`instructions/project-info.md`](./instructions/project-info.md)** for com
 ### Health Check
 - `GET /` - Returns server status and available endpoints
 
+### Authentication
+
+The API includes JWT-based authentication. After seeding the database, you can use these test credentials:
+
+#### Test User Accounts
+- **Admin**: `admin@example.com` / `password123`
+- **Member**: `member@example.com` / `password123` 
+- **User**: `john.doe@example.com` / `password123`
+
+#### Authentication Endpoints
+- `POST /api/auth/login` - Login with email/password, returns JWT token
+- `POST /api/auth/register` - Register new user
+- `GET /api/auth/me` - Get current user info (requires Bearer token)
+- `POST /api/auth/logout` - Logout (client-side token removal)
+
+#### Frontend Integration
+Include the JWT token in requests:
+```javascript
+const token = localStorage.getItem('authToken');
+fetch('/api/applications', {
+  headers: {
+    'Authorization': `Bearer ${token}`,
+    'Content-Type': 'application/json'
+  }
+});
+```
+
 ### Job Roles API
 - `GET /api/jobs` - Get all job roles
 - `GET /api/jobs/:id` - Get specific job role by ID
 - `GET /api/jobs/status/open` - Get all open job roles
 - `GET /api/jobs/status/closed` - Get all closed job roles
+
+### Applications API
+- `POST /api/applications` - Submit job application (requires authentication)
+- `GET /api/applications/:id` - Get application by ID (requires authentication)
+- `GET /api/applications/job/:jobId` - Get all applications for a job (requires authentication)
+- `PUT /api/applications/:id/hire` - Hire applicant (requires admin role)
+- `PUT /api/applications/:id/reject` - Reject applicant (requires admin role)
 
 ### Job Role Data Structure
 ```typescript

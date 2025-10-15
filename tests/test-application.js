@@ -15,7 +15,7 @@ async function testApplicationAPI() {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        email: "user@example.com",
+        email: "member@example.com", // Use correct seeded email
         password: "password123",
       }),
     });

@@ -1,4 +1,4 @@
-// import bcrypt from "bcrypt";
+import bcrypt from "bcryptjs";
 import { db } from "./index.js";
 import { type JobRoleStatus, jobRoles, users } from "./schema.js";
 
@@ -204,17 +204,14 @@ async function seed() {
   console.log("🌱 Seeding database...");
 
   try {
-    // Create sample users with base64 encoded passwords (for demo only)
-    function base64Encode(str: string): string {
-      return Buffer.from(str).toString("base64");
-    }
-    const encodedPassword = base64Encode("password123");
+    // Create sample users with properly hashed passwords
+    const hashedPassword = await bcrypt.hash("password123", 12);
     const now = new Date().toISOString();
 
     const sampleUsers = [
       {
         email: "admin@example.com",
-        password: encodedPassword,
+        password: hashedPassword,
         firstName: "Admin",
         lastName: "User",
         role: "admin" as const,
@@ -222,9 +219,9 @@ async function seed() {
         updatedAt: now,
       },
       {
-        email: "user@example.com",
-        password: encodedPassword,
-        firstName: "Regular",
+        email: "member@example.com",
+        password: hashedPassword,
+        firstName: "Member",
         lastName: "User",
         role: "user" as const,
         createdAt: now,
@@ -232,7 +229,7 @@ async function seed() {
       },
       {
         email: "john.doe@example.com",
-        password: encodedPassword,
+        password: hashedPassword,
         firstName: "John",
         lastName: "Doe",
         role: "user" as const,
@@ -243,9 +240,9 @@ async function seed() {
 
     await db.insert(users).values(sampleUsers);
     console.log("✅ Sample users created!");
-    console.log("   - admin@example.com (password: password123)");
-    console.log("   - user@example.com (password: password123)");
-    console.log("   - john.doe@example.com (password: password123)");
+    console.log("   - admin@example.com (password: password123) - ADMIN");
+    console.log("   - member@example.com (password: password123) - MEMBER");
+    console.log("   - john.doe@example.com (password: password123) - MEMBER");
 
     await db.insert(jobRoles).values(sampleJobs);
     console.log("✅ Database seeded successfully!");

@@ -167,4 +167,80 @@ export class JobRoleController {
       handleError(error, res, "Failed to create job role");
     }
   };
+
+  updateJobRole = async (req: Request, res: Response): Promise<void> => {
+    try {
+      const { id } = req.params;
+
+      if (!id) {
+        res.status(400).json({
+          error: "Job ID is required",
+        });
+        return;
+      }
+
+      const jobId = parseInt(id, 10);
+
+      if (Number.isNaN(jobId)) {
+        res.status(400).json({
+          error: "Invalid job ID. Must be a valid number.",
+        });
+        return;
+      }
+
+      // Check if request body is provided and not empty
+      if (!req.body || Object.keys(req.body).length === 0) {
+        res.status(400).json({
+          error: "Request body is required for update operation",
+        });
+        return;
+      }
+
+      const updatedJob = await this.service.updateJobRole(jobId, req.body);
+
+      res.status(200).json({
+        message: "Job role updated successfully",
+        data: updatedJob,
+      });
+    } catch (error) {
+      handleError(error, res, "Failed to update job role");
+    }
+  };
+
+  deleteJobRole = async (req: Request, res: Response): Promise<void> => {
+    try {
+      const { id } = req.params;
+
+      if (!id) {
+        res.status(400).json({
+          error: "Job ID is required",
+        });
+        return;
+      }
+
+      const jobId = parseInt(id, 10);
+
+      if (Number.isNaN(jobId)) {
+        res.status(400).json({
+          error: "Invalid job ID. Must be a valid number.",
+        });
+        return;
+      }
+
+      // Check for force delete parameter
+      const forceDelete = req.query.force === "true";
+
+      const result = await this.service.deleteJobRole(jobId, forceDelete);
+
+      res.status(204).json({
+        message: "Job role deleted successfully",
+        data: {
+          deletedJob: result.job,
+          deletedApplicationsCount: result.deletedApplicationsCount,
+        },
+      });
+    } catch (error) {
+      handleError(error, res, "Failed to delete job role");
+    }
+  };
 }

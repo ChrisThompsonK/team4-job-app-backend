@@ -21,9 +21,9 @@ export const auth = betterAuth({
     expiresIn: 60 * 60 * 24, // 24 hours
     updateAge: 60 * 60 * 24, // 24 hours
   },
-  secret: process.env.BETTER_AUTH_SECRET || "your-secret-key-change-in-production",
-  baseURL: process.env.BETTER_AUTH_URL || "http://localhost:3001",
-  trustedOrigins: ["http://localhost:3000", "http://localhost:3001"],
+  secret: process.env.BETTER_AUTH_SECRET as string,
+  baseURL: process.env.BETTER_AUTH_URL as string,
+  trustedOrigins: (process.env.TRUSTED_ORIGINS || "").split(","),
 });
 
 export type Session = typeof auth.$Infer.Session;
