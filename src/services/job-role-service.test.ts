@@ -1,5 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { JobRole } from "../db/schema";
+import { ConflictError, NotFoundError, ValidationError } from "../errors/custom-errors";
+import type { ApplicationRepository } from "../repositories/application-repository";
 import type { JobRoleRepository } from "../repositories/job-role-repository";
 import type { JobRoleValidator } from "../validators/job-role-validator";
 import { JobRoleService } from "./job-role-service";
@@ -16,10 +18,17 @@ describe("JobRoleService", () => {
     findByStatus: ReturnType<typeof vi.fn>;
     create: ReturnType<typeof vi.fn>;
     count: ReturnType<typeof vi.fn>;
+    update: ReturnType<typeof vi.fn>;
+    deleteWithApplications: ReturnType<typeof vi.fn>;
   };
 
   let mockValidator: {
     validateCreateJobRole: ReturnType<typeof vi.fn>;
+    validateUpdateJobRole: ReturnType<typeof vi.fn>;
+  };
+
+  let mockApplicationRepository: {
+    findByJobRoleId: ReturnType<typeof vi.fn>;
   };
 
   let service: JobRoleService;
@@ -31,15 +40,23 @@ describe("JobRoleService", () => {
       findByStatus: vi.fn(),
       create: vi.fn(),
       count: vi.fn(),
+      update: vi.fn(),
+      deleteWithApplications: vi.fn(),
     };
 
     mockValidator = {
       validateCreateJobRole: vi.fn(),
+      validateUpdateJobRole: vi.fn(),
+    };
+
+    mockApplicationRepository = {
+      findByJobRoleId: vi.fn(),
     };
 
     service = new JobRoleService(
       mockRepository as unknown as JobRoleRepository,
-      mockValidator as unknown as JobRoleValidator
+      mockValidator as unknown as JobRoleValidator,
+      mockApplicationRepository as unknown as ApplicationRepository
     );
   });
 
@@ -299,6 +316,194 @@ describe("JobRoleService", () => {
 
       expect(result.status).toBe("open");
       expect(result.numberOfOpenPositions).toBe(1);
+    });
+  });
+
+  describe("updateJobRole", () => {
+    const mockJob: JobRole = {
+      id: 1,
+      name: "Software Engineer",
+      location: "London",
+      capability: "Engineering",
+      band: "Senior",
+      closingDate: "2024-12-31T23:59:59.999Z",
+      summary: "Test job",
+      keyResponsibilities: "Code",
+      status: "open",
+      numberOfOpenPositions: 2,
+    };
+
+    it("should successfully update a job role", async () => {
+      const updateInput = {
+        name: "Senior Software Engineer",
+        numberOfOpenPositions: 3,
+      };
+
+      mockRepository.findById.mockResolvedValue(mockJob);
+      mockValidator.validateUpdateJobRole.mockReturnValue({
+        isValid: true,
+        value: {
+          numberOfOpenPositions: 3,
+        },
+      });
+
+      const updatedJob = { ...mockJob, name: "Senior Software Engineer", numberOfOpenPositions: 3 };
+      mockRepository.update.mockResolvedValue(updatedJob);
+
+      const result = await service.updateJobRole(1, updateInput);
+
+      expect(mockRepository.findById).toHaveBeenCalledWith(1);
+      expect(mockValidator.validateUpdateJobRole).toHaveBeenCalledWith(updateInput);
+      expect(mockRepository.update).toHaveBeenCalledWith(1, {
+        name: "Senior Software Engineer",
+        numberOfOpenPositions: 3,
+      });
+      expect(result.name).toBe("Senior Software Engineer");
+      expect(result.numberOfOpenPositions).toBe(3);
+    });
+
+    it("should throw NotFoundError when job does not exist", async () => {
+      mockRepository.findById.mockResolvedValue(null);
+
+      await expect(service.updateJobRole(999, { name: "New Name" })).rejects.toThrow(NotFoundError);
+      expect(mockRepository.findById).toHaveBeenCalledWith(999);
+    });
+
+    it("should throw ValidationError for invalid input", async () => {
+      mockRepository.findById.mockResolvedValue(mockJob);
+      mockValidator.validateUpdateJobRole.mockReturnValue({
+        isValid: false,
+        error: "Invalid input data",
+      });
+
+      await expect(service.updateJobRole(1, { name: "" })).rejects.toThrow(ValidationError);
+    });
+
+    it("should throw ConflictError when closing job with active applications", async () => {
+      const mockApplications = [
+        { id: 1, status: "in progress", jobRoleId: 1 },
+        { id: 2, status: "hired", jobRoleId: 1 },
+      ];
+
+      mockRepository.findById.mockResolvedValue(mockJob);
+      mockValidator.validateUpdateJobRole.mockReturnValue({
+        isValid: true,
+        value: { status: "closed" },
+      });
+      mockApplicationRepository.findByJobRoleId.mockResolvedValue(mockApplications);
+
+      await expect(service.updateJobRole(1, { status: "closed" })).rejects.toThrow(ConflictError);
+    });
+
+    it("should allow closing job with no active applications", async () => {
+      const mockApplications = [
+        { id: 1, status: "hired", jobRoleId: 1 },
+        { id: 2, status: "rejected", jobRoleId: 1 },
+      ];
+
+      mockRepository.findById.mockResolvedValue(mockJob);
+      mockValidator.validateUpdateJobRole.mockReturnValue({
+        isValid: true,
+        value: { status: "closed" },
+      });
+      mockApplicationRepository.findByJobRoleId.mockResolvedValue(mockApplications);
+
+      const updatedJob = { ...mockJob, status: "closed" as const };
+      mockRepository.update.mockResolvedValue(updatedJob);
+
+      const result = await service.updateJobRole(1, { status: "closed" });
+
+      expect(result.status).toBe("closed");
+      expect(mockApplicationRepository.findByJobRoleId).toHaveBeenCalledWith(1);
+    });
+  });
+
+  describe("deleteJobRole", () => {
+    const mockJob: JobRole = {
+      id: 1,
+      name: "Software Engineer",
+      location: "London",
+      capability: "Engineering",
+      band: "Senior",
+      closingDate: "2024-12-31T23:59:59.999Z",
+      summary: "Test job",
+      keyResponsibilities: "Code",
+      status: "open",
+      numberOfOpenPositions: 2,
+    };
+
+    it("should successfully delete a job role with no active applications", async () => {
+      const mockApplications = [
+        { id: 1, status: "hired", jobRoleId: 1 },
+        { id: 2, status: "rejected", jobRoleId: 1 },
+      ];
+
+      mockRepository.findById.mockResolvedValue(mockJob);
+      mockApplicationRepository.findByJobRoleId.mockResolvedValue(mockApplications);
+      mockRepository.deleteWithApplications.mockResolvedValue({
+        job: mockJob,
+        deletedApplicationsCount: 2,
+      });
+
+      const result = await service.deleteJobRole(1);
+
+      expect(result.success).toBe(true);
+      expect(result.job.id).toBe(1);
+      expect(result.job.name).toBe("Software Engineer");
+      expect(result.deletedApplicationsCount).toBe(2);
+    });
+
+    it("should throw NotFoundError when job does not exist", async () => {
+      mockRepository.findById.mockResolvedValue(null);
+
+      await expect(service.deleteJobRole(999)).rejects.toThrow(NotFoundError);
+      expect(mockRepository.findById).toHaveBeenCalledWith(999);
+    });
+
+    it("should throw ConflictError when deleting job with active applications", async () => {
+      const mockApplications = [
+        { id: 1, status: "in progress", jobRoleId: 1 },
+        { id: 2, status: "hired", jobRoleId: 1 },
+      ];
+
+      mockRepository.findById.mockResolvedValue(mockJob);
+      mockApplicationRepository.findByJobRoleId.mockResolvedValue(mockApplications);
+
+      await expect(service.deleteJobRole(1)).rejects.toThrow(ConflictError);
+      expect(mockApplicationRepository.findByJobRoleId).toHaveBeenCalledWith(1);
+    });
+
+    it("should force delete job with active applications when forceDelete is true", async () => {
+      const _mockApplications = [
+        { id: 1, status: "in progress", jobRoleId: 1 },
+        { id: 2, status: "hired", jobRoleId: 1 },
+      ];
+
+      mockRepository.findById.mockResolvedValue(mockJob);
+      mockRepository.deleteWithApplications.mockResolvedValue({
+        job: mockJob,
+        deletedApplicationsCount: 2,
+      });
+
+      const result = await service.deleteJobRole(1, true);
+
+      expect(result.success).toBe(true);
+      expect(result.deletedApplicationsCount).toBe(2);
+      // Should not check for active applications when force delete is true
+      expect(mockApplicationRepository.findByJobRoleId).not.toHaveBeenCalled();
+    });
+
+    it("should handle repository deletion failure", async () => {
+      mockRepository.findById.mockResolvedValue(mockJob);
+      mockApplicationRepository.findByJobRoleId.mockResolvedValue([]);
+      mockRepository.deleteWithApplications.mockResolvedValue({
+        job: null,
+        deletedApplicationsCount: 0,
+      });
+
+      await expect(service.deleteJobRole(1)).rejects.toThrow(
+        "Failed to delete job role - job not found during deletion"
+      );
     });
   });
 });

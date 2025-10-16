@@ -264,4 +264,177 @@ describe("JobRoleValidator", () => {
       expect(result.error).toContain("Invalid closingDate");
     });
   });
+
+  describe("validateUpdateJobRole", () => {
+    it("should successfully validate partial update with valid fields", () => {
+      const input = {
+        name: "Senior Software Engineer",
+        numberOfOpenPositions: 3,
+        status: "open" as const,
+      };
+
+      const result = validator.validateUpdateJobRole(input);
+
+      expect(result.isValid).toBe(true);
+      expect(result.value?.numberOfOpenPositions).toBe(3);
+      expect(result.value?.status).toBe("open");
+    });
+
+    it("should successfully validate update with single field", () => {
+      const input = {
+        name: "Updated Job Title",
+      };
+
+      const result = validator.validateUpdateJobRole(input);
+
+      expect(result.isValid).toBe(true);
+      expect(result.error).toBeUndefined();
+    });
+
+    it("should fail when no fields are provided", () => {
+      const input = {};
+
+      const result = validator.validateUpdateJobRole(input);
+
+      expect(result.isValid).toBe(false);
+      expect(result.error).toBe("At least one field must be provided for update");
+    });
+
+    it("should fail when string fields are empty", () => {
+      const input = {
+        name: "",
+      };
+
+      const result = validator.validateUpdateJobRole(input);
+
+      expect(result.isValid).toBe(false);
+      expect(result.error).toContain("name must be a non-empty string");
+    });
+
+    it("should fail when string fields are only whitespace", () => {
+      const input = {
+        location: "   ",
+      };
+
+      const result = validator.validateUpdateJobRole(input);
+
+      expect(result.isValid).toBe(false);
+      expect(result.error).toContain("location must be a non-empty string");
+    });
+
+    it("should validate all string fields correctly", () => {
+      const input = {
+        name: "Valid Name",
+        location: "Valid Location",
+        capability: "Valid Capability",
+        band: "Valid Band",
+        summary: "Valid Summary",
+        keyResponsibilities: "Valid Responsibilities",
+      };
+
+      const result = validator.validateUpdateJobRole(input);
+
+      expect(result.isValid).toBe(true);
+    });
+
+    it("should validate status field", () => {
+      const input = {
+        status: "closed" as const,
+      };
+
+      const result = validator.validateUpdateJobRole(input);
+
+      expect(result.isValid).toBe(true);
+      expect(result.value?.status).toBe("closed");
+    });
+
+    it("should fail with invalid status", () => {
+      const input = {
+        status: "invalid-status" as "open" | "closed",
+      };
+
+      const result = validator.validateUpdateJobRole(input);
+
+      expect(result.isValid).toBe(false);
+      expect(result.error).toContain("Invalid status");
+    });
+
+    it("should validate numberOfOpenPositions", () => {
+      const input = {
+        numberOfOpenPositions: 5,
+      };
+
+      const result = validator.validateUpdateJobRole(input);
+
+      expect(result.isValid).toBe(true);
+      expect(result.value?.numberOfOpenPositions).toBe(5);
+    });
+
+    it("should fail with negative numberOfOpenPositions", () => {
+      const input = {
+        numberOfOpenPositions: -1,
+      };
+
+      const result = validator.validateUpdateJobRole(input);
+
+      expect(result.isValid).toBe(false);
+      expect(result.error).toContain("numberOfOpenPositions must be a non-negative number");
+    });
+
+    it("should validate closingDate and format it correctly", () => {
+      const input = {
+        closingDate: "2024-12-31",
+      };
+
+      const result = validator.validateUpdateJobRole(input);
+
+      expect(result.isValid).toBe(true);
+      expect(result.value?.formattedClosingDate).toBeDefined();
+      expect(result.value?.formattedClosingDate).toMatch(
+        /\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z/
+      );
+    });
+
+    it("should fail with invalid closingDate", () => {
+      const input = {
+        closingDate: "not-a-valid-date",
+      };
+
+      const result = validator.validateUpdateJobRole(input);
+
+      expect(result.isValid).toBe(false);
+      expect(result.error).toContain("Invalid closingDate");
+    });
+
+    it("should handle mixed valid fields", () => {
+      const input = {
+        name: "Valid Name",
+        status: "open" as const,
+        closingDate: "2024-12-31",
+      };
+
+      const result = validator.validateUpdateJobRole(input);
+
+      expect(result.isValid).toBe(true);
+      expect(result.value?.status).toBe("open");
+      expect(result.value?.formattedClosingDate).toBeDefined();
+      expect(result.value?.numberOfOpenPositions).toBeUndefined();
+    });
+
+    it("should return correct result structure", () => {
+      const input = {
+        status: "closed" as const,
+        numberOfOpenPositions: 0,
+        closingDate: "2024-12-31",
+      };
+
+      const result = validator.validateUpdateJobRole(input);
+
+      expect(result.isValid).toBe(true);
+      expect(result.value).toHaveProperty("status");
+      expect(result.value).toHaveProperty("numberOfOpenPositions");
+      expect(result.value).toHaveProperty("formattedClosingDate");
+      expect(result.error).toBeUndefined();
+    });
+  });
 });

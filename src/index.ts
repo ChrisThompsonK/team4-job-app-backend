@@ -49,6 +49,8 @@ app.get("/", (_req, res) => {
       jobById: "GET /api/jobs/:id",
       jobsByStatus: "GET /api/jobs/status/:status",
       createJob: "POST /api/jobs",
+      updateJob: "PUT /api/jobs/:id",
+      deleteJob: "DELETE /api/jobs/:id (supports ?force=true query parameter)",
 
       // Application endpoints (no authentication required)
       applications: "GET /api/applications",
