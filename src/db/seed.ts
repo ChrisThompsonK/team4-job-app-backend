@@ -1,4 +1,5 @@
 import bcrypt from "bcryptjs";
+import { sql } from "drizzle-orm";
 import { db } from "./index.js";
 import { type JobRoleStatus, jobRoles, users } from "./schema.js";
 
@@ -204,6 +205,12 @@ async function seed() {
   console.log("🌱 Seeding database...");
 
   try {
+    // Clear existing data (for development seeding)
+    console.log("🧹 Clearing existing data...");
+    await db.delete(jobRoles);
+    await db.delete(users);
+    console.log("✅ Existing data cleared!");
+
     // Create sample users with properly hashed passwords
     const hashedPassword = await bcrypt.hash("password123", 12);
     const now = new Date().toISOString();
