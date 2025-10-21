@@ -1,5 +1,4 @@
 import bcrypt from "bcryptjs";
-import { sql } from "drizzle-orm";
 import { db } from "./index.js";
 import { type JobRoleStatus, jobRoles, users } from "./schema.js";
 
