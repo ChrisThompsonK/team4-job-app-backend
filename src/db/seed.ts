@@ -1,4 +1,5 @@
 import bcrypt from "bcryptjs";
+import { eq } from "drizzle-orm";
 import { db } from "./index.js";
 import { type JobRoleStatus, jobRoles, users } from "./schema.js";
 
@@ -238,14 +239,32 @@ async function seed() {
       },
     ];
 
-    await db.insert(users).values(sampleUsers);
-    console.log("✅ Sample users created!");
+    // Insert users only if they don't exist
+    for (const user of sampleUsers) {
+      const existingUser = await db.select().from(users).where(eq(users.email, user.email)).limit(1);
+      if (existingUser.length === 0) {
+        await db.insert(users).values(user);
+        console.log(`✅ Created user: ${user.email}`);
+      } else {
+        console.log(`ℹ️  User already exists: ${user.email}`);
+      }
+    }
+
+    console.log("✅ Sample users processed!");
     console.log("   - admin@example.com (password: password123) - ADMIN");
     console.log("   - member@example.com (password: password123) - MEMBER");
     console.log("   - john.doe@example.com (password: password123) - MEMBER");
 
-    await db.insert(jobRoles).values(sampleJobs);
-    console.log("✅ Database seeded successfully!");
+    // Check if job roles already exist
+    const existingJobs = await db.select().from(jobRoles).limit(1);
+    if (existingJobs.length === 0) {
+      await db.insert(jobRoles).values(sampleJobs);
+      console.log("✅ Sample job roles created!");
+    } else {
+      console.log("ℹ️  Job roles already exist, skipping job seeding.");
+    }
+
+    console.log("✅ Database seeding completed successfully!");
   } catch (error) {
     console.error("❌ Error seeding database:", error);
   }

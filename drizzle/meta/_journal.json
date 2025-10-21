@@ -29,6 +29,20 @@
       "when": 1760449739850,
       "tag": "0003_melodic_hobgoblin",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "6",
+      "when": 1761042907980,
+      "tag": "0004_furry_rattler",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "6",
+      "when": 1761042907981,
+      "tag": "0005_yellow_network",
+      "breakpoints": true
     }
   ]
 }
