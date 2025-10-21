@@ -241,7 +241,11 @@ async function seed() {
 
     // Insert users only if they don't exist
     for (const user of sampleUsers) {
-      const existingUser = await db.select().from(users).where(eq(users.email, user.email)).limit(1);
+      const existingUser = await db
+        .select()
+        .from(users)
+        .where(eq(users.email, user.email))
+        .limit(1);
       if (existingUser.length === 0) {
         await db.insert(users).values(user);
         console.log(`✅ Created user: ${user.email}`);
