@@ -1,4 +1,3 @@
-import { db } from "../db/index.js";
 import type { NewApplication } from "../db/schema.js";
 import { BusinessLogicError, NotFoundError, ValidationError } from "../errors/custom-errors.js";
 import { ApplicationRepository } from "../repositories/application-repository.js";
@@ -119,53 +118,43 @@ export class ApplicationService {
       throw new ValidationError("Valid application ID is required");
     }
 
-    // Use transaction to ensure atomicity
-    return await db.transaction(async (_tx) => {
-      // Get application with job role data
-      const result = await this.applicationRepository.findByIdWithJobRole(applicationId);
+    // Get application with job role data
+    const result = await this.applicationRepository.findByIdWithJobRole(applicationId);
 
-      if (!result) {
-        throw new NotFoundError("Application not found");
-      }
+    if (!result) {
+      throw new NotFoundError("Application not found");
+    }
 
-      const { application, jobRole } = result;
+    const { application, jobRole } = result;
 
-      // Validate status transition
-      const statusValidation = this.validator.validateStatusTransition(application.status, "hired");
-      if (!statusValidation.isValid) {
-        throw new BusinessLogicError(statusValidation.errors.map((e) => e.message).join(", "));
-      }
+    // Validate status transition
+    const statusValidation = this.validator.validateStatusTransition(application.status, "hired");
+    if (!statusValidation.isValid) {
+      throw new BusinessLogicError(statusValidation.errors.map((e) => e.message).join(", "));
+    }
 
-      // Check if there are open positions
-      if (jobRole.numberOfOpenPositions <= 0) {
-        throw new BusinessLogicError("No open positions available for this job role");
-      }
+    // Check if there are open positions
+    if (jobRole.numberOfOpenPositions <= 0) {
+      throw new BusinessLogicError("No open positions available for this job role");
+    }
 
-      // Update application status to hired
-      const updatedApplication = await this.applicationRepository.updateStatus(
-        applicationId,
-        "hired"
-      );
+    // Update application status to hired
+    await this.applicationRepository.updateStatus(applicationId, "hired");
 
-      if (!updatedApplication) {
-        throw new Error("Failed to update application status");
-      }
+    // Decrement open positions
+    await this.jobRoleRepository.decrementOpenPositions(jobRole.id);
 
-      // Decrement open positions
-      const updatedJobRole = await this.jobRoleRepository.decrementOpenPositions(jobRole.id);
+    // Fetch the updated application with user details
+    const updatedApplication = await this.applicationRepository.findById(applicationId);
 
-      if (!updatedJobRole) {
-        throw new Error("Failed to update job role positions");
-      }
+    if (!updatedApplication) {
+      throw new Error("Failed to fetch updated application");
+    }
 
-      return {
-        application: {
-          ...updatedApplication,
-          createdAt: new Date(updatedApplication.createdAt),
-        },
-        jobRole: updatedJobRole,
-      };
-    });
+    return {
+      ...updatedApplication,
+      createdAt: new Date(updatedApplication.createdAt),
+    };
   }
 
   async rejectApplicant(applicationId: number) {
@@ -191,13 +180,13 @@ export class ApplicationService {
     }
 
     // Update application status to rejected
-    const updatedApplication = await this.applicationRepository.updateStatus(
-      applicationId,
-      "rejected"
-    );
+    await this.applicationRepository.updateStatus(applicationId, "rejected");
+
+    // Fetch the updated application with user details
+    const updatedApplication = await this.applicationRepository.findById(applicationId);
 
     if (!updatedApplication) {
-      throw new Error("Failed to update application status");
+      throw new Error("Failed to fetch updated application");
     }
 
     return {
