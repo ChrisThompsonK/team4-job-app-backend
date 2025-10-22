@@ -126,6 +126,9 @@ export const applications = sqliteTable("applications", {
   jobRoleId: integer("job_role_id")
     .notNull()
     .references(() => jobRoles.id),
+  applicantName: text("applicant_name").notNull(),
+  email: text("email").notNull(),
+  phoneNumber: text("phone_number"),
   cvText: text("cv_text").notNull(),
   status: text("status").notNull().default("in progress").$type<ApplicationStatus>(), // "in progress" | "hired" | "rejected"
   createdAt: text("created_at").notNull(), // stored as ISO string

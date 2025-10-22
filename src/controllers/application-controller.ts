@@ -11,11 +11,11 @@ export class ApplicationController {
 
   createApplication = async (req: Request, res: Response): Promise<void> => {
     try {
-      const { jobRoleId, cvText, userId } = req.body;
+      const { jobRoleId, cvText, userId, applicantName, email, phoneNumber } = req.body;
 
-      if (!userId || !jobRoleId || !cvText) {
+      if (!userId || !jobRoleId || !cvText || !applicantName || !email) {
         res.status(400).json({
-          error: "User ID, job role ID, and CV text are required",
+          error: "User ID, job role ID, applicant name, email, and CV text are required",
         });
         return;
       }
@@ -23,6 +23,9 @@ export class ApplicationController {
       const application = await this.service.createApplication({
         userId: userId,
         jobRoleId: Number.parseInt(jobRoleId, 10),
+        applicantName,
+        email,
+        phoneNumber: phoneNumber || "",
         cvText,
       });
 
@@ -93,6 +96,37 @@ export class ApplicationController {
       }
 
       const applications = await this.service.getApplicationsByJobRole(id);
+
+      res.json({
+        data: applications,
+        count: applications.length,
+      });
+    } catch (error) {
+      handleError(error, res, "Failed to fetch applications");
+    }
+  };
+
+  getApplicationsByUserId = async (req: Request, res: Response): Promise<void> => {
+    try {
+      const { userId } = req.params;
+
+      if (!userId) {
+        res.status(400).json({
+          error: "User ID is required",
+        });
+        return;
+      }
+
+      const id = Number.parseInt(userId, 10);
+
+      if (Number.isNaN(id)) {
+        res.status(400).json({
+          error: "Invalid user ID",
+        });
+        return;
+      }
+
+      const applications = await this.service.getApplicationsByUserId(id);
 
       res.json({
         data: applications,

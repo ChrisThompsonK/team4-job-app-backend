@@ -22,6 +22,14 @@ export class ApplicationRepository {
       .orderBy(desc(applications.createdAt));
   }
 
+  async findByUserId(userId: number) {
+    return await db
+      .select()
+      .from(applications)
+      .where(eq(applications.userId, userId))
+      .orderBy(desc(applications.createdAt));
+  }
+
   async updateStatus(id: number, status: ApplicationStatus) {
     const result = await db
       .update(applications)

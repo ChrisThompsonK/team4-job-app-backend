@@ -8,6 +8,9 @@ import { ApplicationValidator } from "../validators/application-validator.js";
 interface CreateApplicationInput {
   userId: number;
   jobRoleId: number;
+  applicantName: string;
+  email: string;
+  phoneNumber?: string;
   cvText: string;
 }
 
@@ -53,6 +56,9 @@ export class ApplicationService {
     const newApplication: NewApplication = {
       userId: input.userId,
       jobRoleId: input.jobRoleId,
+      applicantName: input.applicantName,
+      email: input.email,
+      phoneNumber: input.phoneNumber || null,
       cvText: input.cvText.trim(),
       status: "in progress",
       createdAt: new Date().toISOString(),
@@ -91,6 +97,20 @@ export class ApplicationService {
     }
 
     const applications = await this.applicationRepository.findByJobRoleId(jobRoleId);
+
+    // Convert createdAt string to Date object for frontend
+    return applications.map((app) => ({
+      ...app,
+      createdAt: new Date(app.createdAt),
+    }));
+  }
+
+  async getApplicationsByUserId(userId: number) {
+    if (!userId || !Number.isInteger(userId) || userId <= 0) {
+      throw new ValidationError("Valid user ID is required");
+    }
+
+    const applications = await this.applicationRepository.findByUserId(userId);
 
     // Convert createdAt string to Date object for frontend
     return applications.map((app) => ({
