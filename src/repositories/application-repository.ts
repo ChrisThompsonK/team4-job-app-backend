@@ -6,7 +6,12 @@ import { applications, jobRoles, users } from "../db/schema.js";
 export class ApplicationRepository {
   async create(application: NewApplication) {
     const result = await db.insert(applications).values(application).returning();
-    return result[0] || null;
+    const createdApplication = result[0];
+
+    if (!createdApplication) return null;
+
+    // Fetch the complete application with user details
+    return await this.findById(createdApplication.id);
   }
 
   /**
