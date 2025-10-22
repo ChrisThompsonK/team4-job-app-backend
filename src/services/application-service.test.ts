@@ -334,11 +334,13 @@ describe("ApplicationService", () => {
         errors: [],
       });
 
-      const updatedApplication = { ...mockApplication, status: "hired" };
-      mockApplicationRepository.updateStatus.mockResolvedValue(updatedApplication);
+      mockApplicationRepository.updateStatus.mockResolvedValue(undefined);
 
       const updatedJobRole = { ...mockJobRole, numberOfOpenPositions: 1 };
       mockJobRoleRepository.decrementOpenPositions.mockResolvedValue(updatedJobRole);
+
+      const updatedApplication = { ...mockApplication, status: "hired" };
+      mockApplicationRepository.findById.mockResolvedValue(updatedApplication);
 
       const result = await service.hireApplicant(1);
 
@@ -346,8 +348,9 @@ describe("ApplicationService", () => {
       expect(mockValidator.validateStatusTransition).toHaveBeenCalledWith("in progress", "hired");
       expect(mockApplicationRepository.updateStatus).toHaveBeenCalledWith(1, "hired");
       expect(mockJobRoleRepository.decrementOpenPositions).toHaveBeenCalledWith(1);
-      expect(result.application.status).toBe("hired");
-      expect(result.jobRole.numberOfOpenPositions).toBe(1);
+      expect(mockApplicationRepository.findById).toHaveBeenCalledWith(1);
+      expect(result.status).toBe("hired");
+      expect(result.createdAt).toBeInstanceOf(Date);
     });
 
     it("should throw error when application not found", async () => {
@@ -419,15 +422,17 @@ describe("ApplicationService", () => {
     };
 
     it("should successfully reject an applicant", async () => {
-      mockApplicationRepository.findById.mockResolvedValue(mockApplication);
+      mockApplicationRepository.findById.mockResolvedValueOnce(mockApplication);
 
       mockValidator.validateStatusTransition.mockReturnValue({
         isValid: true,
         errors: [],
       });
 
+      mockApplicationRepository.updateStatus.mockResolvedValue(undefined);
+
       const updatedApplication = { ...mockApplication, status: "rejected" };
-      mockApplicationRepository.updateStatus.mockResolvedValue(updatedApplication);
+      mockApplicationRepository.findById.mockResolvedValueOnce(updatedApplication);
 
       const result = await service.rejectApplicant(1);
 
