@@ -9,8 +9,11 @@ export class ApplicationRepository {
     return result[0] || null;
   }
 
-  async findById(id: number) {
-    const result = await db
+  /**
+   * Helper method to build the base query with user join and applicant details
+   */
+  private getApplicationWithUserQuery() {
+    return db
       .select({
         application: applications,
         user: {
@@ -21,63 +24,45 @@ export class ApplicationRepository {
         },
       })
       .from(applications)
-      .innerJoin(users, eq(applications.userId, users.id))
-      .where(eq(applications.id, id))
-      .limit(1);
+      .innerJoin(users, eq(applications.userId, users.id));
+  }
 
-    if (!result[0]) return null;
-
+  /**
+   * Helper method to map the query result to include computed applicant details
+   */
+  private mapApplicationWithUser(result: {
+    application: typeof applications.$inferSelect;
+    user: { id: number; email: string; firstName: string; lastName: string };
+  }) {
     return {
-      ...result[0].application,
-      applicantName: `${result[0].user.firstName} ${result[0].user.lastName}`,
-      email: result[0].user.email,
+      ...result.application,
+      applicantName: `${result.user.firstName} ${result.user.lastName}`,
+      email: result.user.email,
     };
   }
 
+  async findById(id: number) {
+    const result = await this.getApplicationWithUserQuery().where(eq(applications.id, id)).limit(1);
+
+    if (!result[0]) return null;
+
+    return this.mapApplicationWithUser(result[0]);
+  }
+
   async findByJobRoleId(jobRoleId: number) {
-    const results = await db
-      .select({
-        application: applications,
-        user: {
-          id: users.id,
-          email: users.email,
-          firstName: users.firstName,
-          lastName: users.lastName,
-        },
-      })
-      .from(applications)
-      .innerJoin(users, eq(applications.userId, users.id))
+    const results = await this.getApplicationWithUserQuery()
       .where(eq(applications.jobRoleId, jobRoleId))
       .orderBy(desc(applications.createdAt));
 
-    return results.map((r) => ({
-      ...r.application,
-      applicantName: `${r.user.firstName} ${r.user.lastName}`,
-      email: r.user.email,
-    }));
+    return results.map((r) => this.mapApplicationWithUser(r));
   }
 
   async findByUserId(userId: number) {
-    const results = await db
-      .select({
-        application: applications,
-        user: {
-          id: users.id,
-          email: users.email,
-          firstName: users.firstName,
-          lastName: users.lastName,
-        },
-      })
-      .from(applications)
-      .innerJoin(users, eq(applications.userId, users.id))
+    const results = await this.getApplicationWithUserQuery()
       .where(eq(applications.userId, userId))
       .orderBy(desc(applications.createdAt));
 
-    return results.map((r) => ({
-      ...r.application,
-      applicantName: `${r.user.firstName} ${r.user.lastName}`,
-      email: r.user.email,
-    }));
+    return results.map((r) => this.mapApplicationWithUser(r));
   }
 
   async updateStatus(id: number, status: ApplicationStatus) {
