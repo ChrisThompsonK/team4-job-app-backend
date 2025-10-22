@@ -124,6 +124,9 @@ describe("ApplicationValidator", () => {
       const validData = {
         userId: 1,
         jobRoleId: 1,
+        applicantName: "John Doe",
+        email: "john.doe@example.com",
+        phoneNumber: "1234567890",
         cvText: "This is a valid CV text with more than 50 characters to pass validation.",
       };
 
@@ -137,21 +140,27 @@ describe("ApplicationValidator", () => {
       const invalidData = {
         userId: 0, // This won't be validated anymore since it comes from auth
         jobRoleId: 0,
+        applicantName: "",
+        email: "invalid-email",
         cvText: "Short",
       };
 
       const result = validator.validateApplication(invalidData);
 
       expect(result.isValid).toBe(false);
-      expect(result.errors).toHaveLength(2); // Only jobRoleId and cvText errors
+      expect(result.errors).toHaveLength(4); // jobRoleId, cvText, applicantName, email errors
       expect(result.errors.some((e) => e.field === "jobRoleId")).toBe(true);
       expect(result.errors.some((e) => e.field === "cvText")).toBe(true);
+      expect(result.errors.some((e) => e.field === "applicantName")).toBe(true);
+      expect(result.errors.some((e) => e.field === "email")).toBe(true);
     });
 
     it("should return only jobRoleId error when only jobRoleId is invalid", () => {
       const data = {
         userId: 1,
         jobRoleId: -1,
+        applicantName: "John Doe",
+        email: "john.doe@example.com",
         cvText: "This is a valid CV text with more than 50 characters to pass validation.",
       };
 
@@ -166,6 +175,8 @@ describe("ApplicationValidator", () => {
       const data = {
         userId: 1,
         jobRoleId: 1,
+        applicantName: "John Doe",
+        email: "john.doe@example.com",
         cvText: "",
       };
 

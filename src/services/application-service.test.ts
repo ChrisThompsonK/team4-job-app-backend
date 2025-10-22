@@ -63,6 +63,9 @@ describe("ApplicationService", () => {
     const validInput = {
       userId: 1,
       jobRoleId: 1,
+      applicantName: "John Doe",
+      email: "john.doe@example.com",
+      phoneNumber: "1234567890",
       cvText: "This is my CV text with more than 50 characters to pass validation requirements.",
     };
 
@@ -91,6 +94,9 @@ describe("ApplicationService", () => {
         id: 1,
         userId: 1,
         jobRoleId: 1,
+        applicantName: "John Doe",
+        email: "john.doe@example.com",
+        phoneNumber: "1234567890",
         cvText: validInput.cvText,
         status: "in progress",
         createdAt: new Date().toISOString(),
@@ -105,6 +111,9 @@ describe("ApplicationService", () => {
       expect(mockApplicationRepository.create).toHaveBeenCalledWith({
         userId: 1,
         jobRoleId: 1,
+        applicantName: "John Doe",
+        email: "john.doe@example.com",
+        phoneNumber: "1234567890",
         cvText: validInput.cvText,
         status: "in progress",
         createdAt: expect.any(String),
@@ -195,6 +204,9 @@ describe("ApplicationService", () => {
         id: 1,
         userId: 1,
         jobRoleId: 1,
+        applicantName: "John Doe",
+        email: "john.doe@example.com",
+        phoneNumber: "1234567890",
         cvText: validInput.cvText,
         status: "in progress",
         createdAt: new Date().toISOString(),
@@ -212,6 +224,9 @@ describe("ApplicationService", () => {
       expect(mockApplicationRepository.create).toHaveBeenCalledWith({
         userId: 1,
         jobRoleId: 1,
+        applicantName: "John Doe",
+        email: "john.doe@example.com",
+        phoneNumber: "1234567890",
         cvText: validInput.cvText,
         status: "in progress",
         createdAt: expect.any(String),
