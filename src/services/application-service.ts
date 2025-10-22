@@ -32,6 +32,15 @@ export class ApplicationService {
       throw new ValidationError(validation.errors.map((e) => e.message).join(", "));
     }
 
+    // Check if user has already applied for this job
+    const existingApplication = await this.applicationRepository.findByUserIdAndJobRoleId(
+      input.userId,
+      input.jobRoleId
+    );
+    if (existingApplication) {
+      throw new BusinessLogicError("You have already applied for this job role");
+    }
+
     // Check if job role exists
     const jobRole = await this.jobRoleRepository.findById(input.jobRoleId);
     if (!jobRole) {

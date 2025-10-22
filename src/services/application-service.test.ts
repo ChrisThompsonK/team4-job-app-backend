@@ -19,6 +19,7 @@ describe("ApplicationService", () => {
     findByJobRoleId: ReturnType<typeof vi.fn>;
     updateStatus: ReturnType<typeof vi.fn>;
     findByIdWithJobRole: ReturnType<typeof vi.fn>;
+    findByUserIdAndJobRoleId: ReturnType<typeof vi.fn>;
   };
 
   let mockJobRoleRepository: {
@@ -40,6 +41,7 @@ describe("ApplicationService", () => {
       findByJobRoleId: vi.fn(),
       updateStatus: vi.fn(),
       findByIdWithJobRole: vi.fn(),
+      findByUserIdAndJobRoleId: vi.fn(),
     };
 
     mockJobRoleRepository = {
@@ -85,6 +87,7 @@ describe("ApplicationService", () => {
         errors: [],
       });
 
+      mockApplicationRepository.findByUserIdAndJobRoleId.mockResolvedValue(null);
       mockJobRoleRepository.findById.mockResolvedValue(mockOpenJobRole);
 
       const mockCreatedApplication = {
@@ -101,6 +104,7 @@ describe("ApplicationService", () => {
       const result = await service.createApplication(validInput);
 
       expect(mockValidator.validateApplication).toHaveBeenCalledWith(validInput);
+      expect(mockApplicationRepository.findByUserIdAndJobRoleId).toHaveBeenCalledWith(1, 1);
       expect(mockJobRoleRepository.findById).toHaveBeenCalledWith(1);
       expect(mockApplicationRepository.create).toHaveBeenCalledWith({
         userId: 1,
@@ -120,6 +124,33 @@ describe("ApplicationService", () => {
 
       await expect(service.createApplication(validInput)).rejects.toThrow("CV text is required");
 
+      expect(mockApplicationRepository.findByUserIdAndJobRoleId).not.toHaveBeenCalled();
+      expect(mockJobRoleRepository.findById).not.toHaveBeenCalled();
+      expect(mockApplicationRepository.create).not.toHaveBeenCalled();
+    });
+
+    it("should throw error when user has already applied for the job", async () => {
+      mockValidator.validateApplication.mockReturnValue({
+        isValid: true,
+        errors: [],
+      });
+
+      const existingApplication = {
+        id: 5,
+        userId: 1,
+        jobRoleId: 1,
+        cvText: "Previous application",
+        status: "in progress",
+        createdAt: new Date().toISOString(),
+      };
+
+      mockApplicationRepository.findByUserIdAndJobRoleId.mockResolvedValue(existingApplication);
+
+      await expect(service.createApplication(validInput)).rejects.toThrow(
+        "You have already applied for this job role"
+      );
+
+      expect(mockApplicationRepository.findByUserIdAndJobRoleId).toHaveBeenCalledWith(1, 1);
       expect(mockJobRoleRepository.findById).not.toHaveBeenCalled();
       expect(mockApplicationRepository.create).not.toHaveBeenCalled();
     });
@@ -130,6 +161,7 @@ describe("ApplicationService", () => {
         errors: [],
       });
 
+      mockApplicationRepository.findByUserIdAndJobRoleId.mockResolvedValue(null);
       mockJobRoleRepository.findById.mockResolvedValue(null);
 
       await expect(service.createApplication(validInput)).rejects.toThrow("Job role not found");
@@ -143,6 +175,7 @@ describe("ApplicationService", () => {
         errors: [],
       });
 
+      mockApplicationRepository.findByUserIdAndJobRoleId.mockResolvedValue(null);
       const closedJobRole = { ...mockOpenJobRole, status: "closed" };
       mockJobRoleRepository.findById.mockResolvedValue(closedJobRole);
 
@@ -159,6 +192,7 @@ describe("ApplicationService", () => {
         errors: [],
       });
 
+      mockApplicationRepository.findByUserIdAndJobRoleId.mockResolvedValue(null);
       const noPositionsJobRole = { ...mockOpenJobRole, numberOfOpenPositions: 0 };
       mockJobRoleRepository.findById.mockResolvedValue(noPositionsJobRole);
 
@@ -175,6 +209,7 @@ describe("ApplicationService", () => {
         errors: [],
       });
 
+      mockApplicationRepository.findByUserIdAndJobRoleId.mockResolvedValue(null);
       mockJobRoleRepository.findById.mockResolvedValue(mockOpenJobRole);
       mockApplicationRepository.create.mockResolvedValue(null);
 
@@ -189,6 +224,7 @@ describe("ApplicationService", () => {
         errors: [],
       });
 
+      mockApplicationRepository.findByUserIdAndJobRoleId.mockResolvedValue(null);
       mockJobRoleRepository.findById.mockResolvedValue(mockOpenJobRole);
 
       const mockCreatedApplication = {

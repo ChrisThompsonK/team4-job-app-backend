@@ -1,4 +1,4 @@
-import { desc, eq, sql } from "drizzle-orm";
+import { and, desc, eq, sql } from "drizzle-orm";
 import { db } from "../db/index.js";
 import type { ApplicationStatus, NewApplication } from "../db/schema.js";
 import { applications, jobRoles, users } from "../db/schema.js";
@@ -106,5 +106,14 @@ export class ApplicationRepository {
       .from(applications)
       .where(eq(applications.jobRoleId, jobRoleId));
     return result[0]?.count || 0;
+  }
+
+  async findByUserIdAndJobRoleId(userId: number, jobRoleId: number) {
+    const result = await db
+      .select()
+      .from(applications)
+      .where(and(eq(applications.userId, userId), eq(applications.jobRoleId, jobRoleId)))
+      .limit(1);
+    return result[0] || null;
   }
 }
