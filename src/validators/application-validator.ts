@@ -70,73 +70,18 @@ export class ApplicationValidator {
   validateApplication(data: {
     userId: number;
     jobRoleId: number;
-    applicantName: string;
-    email: string;
-    phoneNumber?: string;
     cvText: string;
   }): ValidationResult {
     // Note: userId validation is removed since it now comes from authentication
     // and is guaranteed to be valid by the auth middleware
     const jobRoleIdValidation = this.validateJobRoleId(data.jobRoleId);
     const cvTextValidation = this.validateCvText(data.cvText);
-    const emailValidation = this.validateEmail(data.email);
-    const nameValidation = this.validateApplicantName(data.applicantName);
 
-    const allErrors = [
-      ...jobRoleIdValidation.errors,
-      ...cvTextValidation.errors,
-      ...emailValidation.errors,
-      ...nameValidation.errors,
-    ];
+    const allErrors = [...jobRoleIdValidation.errors, ...cvTextValidation.errors];
 
     return {
       isValid: allErrors.length === 0,
       errors: allErrors,
-    };
-  }
-
-  validateEmail(email: string): ValidationResult {
-    const errors: ValidationError[] = [];
-
-    if (!email || email.trim().length === 0) {
-      errors.push({
-        field: "email",
-        message: "Email is required",
-      });
-    } else {
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      if (!emailRegex.test(email)) {
-        errors.push({
-          field: "email",
-          message: "Invalid email format",
-        });
-      }
-    }
-
-    return {
-      isValid: errors.length === 0,
-      errors,
-    };
-  }
-
-  validateApplicantName(name: string): ValidationResult {
-    const errors: ValidationError[] = [];
-
-    if (!name || name.trim().length === 0) {
-      errors.push({
-        field: "applicantName",
-        message: "Applicant name is required",
-      });
-    } else if (name.trim().length < 2) {
-      errors.push({
-        field: "applicantName",
-        message: "Applicant name must be at least 2 characters long",
-      });
-    }
-
-    return {
-      isValid: errors.length === 0,
-      errors,
     };
   }
 

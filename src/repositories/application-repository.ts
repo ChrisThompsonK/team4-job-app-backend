@@ -1,7 +1,7 @@
 import { desc, eq, sql } from "drizzle-orm";
 import { db } from "../db/index.js";
 import type { ApplicationStatus, NewApplication } from "../db/schema.js";
-import { applications, jobRoles } from "../db/schema.js";
+import { applications, jobRoles, users } from "../db/schema.js";
 
 export class ApplicationRepository {
   async create(application: NewApplication) {
@@ -10,24 +10,74 @@ export class ApplicationRepository {
   }
 
   async findById(id: number) {
-    const result = await db.select().from(applications).where(eq(applications.id, id)).limit(1);
-    return result[0] || null;
+    const result = await db
+      .select({
+        application: applications,
+        user: {
+          id: users.id,
+          email: users.email,
+          firstName: users.firstName,
+          lastName: users.lastName,
+        },
+      })
+      .from(applications)
+      .innerJoin(users, eq(applications.userId, users.id))
+      .where(eq(applications.id, id))
+      .limit(1);
+
+    if (!result[0]) return null;
+
+    return {
+      ...result[0].application,
+      applicantName: `${result[0].user.firstName} ${result[0].user.lastName}`,
+      email: result[0].user.email,
+    };
   }
 
   async findByJobRoleId(jobRoleId: number) {
-    return await db
-      .select()
+    const results = await db
+      .select({
+        application: applications,
+        user: {
+          id: users.id,
+          email: users.email,
+          firstName: users.firstName,
+          lastName: users.lastName,
+        },
+      })
       .from(applications)
+      .innerJoin(users, eq(applications.userId, users.id))
       .where(eq(applications.jobRoleId, jobRoleId))
       .orderBy(desc(applications.createdAt));
+
+    return results.map((r) => ({
+      ...r.application,
+      applicantName: `${r.user.firstName} ${r.user.lastName}`,
+      email: r.user.email,
+    }));
   }
 
   async findByUserId(userId: number) {
-    return await db
-      .select()
+    const results = await db
+      .select({
+        application: applications,
+        user: {
+          id: users.id,
+          email: users.email,
+          firstName: users.firstName,
+          lastName: users.lastName,
+        },
+      })
       .from(applications)
+      .innerJoin(users, eq(applications.userId, users.id))
       .where(eq(applications.userId, userId))
       .orderBy(desc(applications.createdAt));
+
+    return results.map((r) => ({
+      ...r.application,
+      applicantName: `${r.user.firstName} ${r.user.lastName}`,
+      email: r.user.email,
+    }));
   }
 
   async updateStatus(id: number, status: ApplicationStatus) {

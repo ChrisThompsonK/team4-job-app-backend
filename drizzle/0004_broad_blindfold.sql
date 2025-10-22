@@ -68,9 +68,6 @@ CREATE TABLE `__new_applications` (
 	`id` integer PRIMARY KEY AUTOINCREMENT NOT NULL,
 	`user_id` integer NOT NULL,
 	`job_role_id` integer NOT NULL,
-	`applicant_name` text NOT NULL,
-	`email` text NOT NULL,
-	`phone_number` text,
 	`cv_text` text NOT NULL,
 	`status` text DEFAULT 'in progress' NOT NULL,
 	`created_at` text NOT NULL,
@@ -78,7 +75,7 @@ CREATE TABLE `__new_applications` (
 	FOREIGN KEY (`job_role_id`) REFERENCES `job_roles`(`id`) ON UPDATE no action ON DELETE no action
 );
 --> statement-breakpoint
-INSERT INTO `__new_applications`("id", "user_id", "job_role_id", "applicant_name", "email", "phone_number", "cv_text", "status", "created_at") SELECT "id", "user_id", "job_role_id", "applicant_name", "email", "phone_number", "cv_text", "status", "created_at" FROM `applications`;--> statement-breakpoint
+INSERT INTO `__new_applications`("id", "user_id", "job_role_id", "cv_text", "status", "created_at") SELECT "id", "user_id", "job_role_id", "cv_text", "status", "created_at" FROM `applications`;--> statement-breakpoint
 DROP TABLE `applications`;--> statement-breakpoint
 ALTER TABLE `__new_applications` RENAME TO `applications`;--> statement-breakpoint
 PRAGMA foreign_keys=ON;

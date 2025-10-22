@@ -8,9 +8,6 @@ import { ApplicationValidator } from "../validators/application-validator.js";
 interface CreateApplicationInput {
   userId: number;
   jobRoleId: number;
-  applicantName: string;
-  email: string;
-  phoneNumber?: string;
   cvText: string;
 }
 
@@ -56,9 +53,6 @@ export class ApplicationService {
     const newApplication: NewApplication = {
       userId: input.userId,
       jobRoleId: input.jobRoleId,
-      applicantName: input.applicantName,
-      email: input.email,
-      phoneNumber: input.phoneNumber || null,
       cvText: input.cvText.trim(),
       status: "in progress",
       createdAt: new Date().toISOString(),
