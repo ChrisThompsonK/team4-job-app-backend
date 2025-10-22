@@ -72,8 +72,6 @@ export class ApplicationValidator {
     jobRoleId: number;
     cvText: string;
   }): ValidationResult {
-    // Note: userId validation is removed since it now comes from authentication
-    // and is guaranteed to be valid by the auth middleware
     const jobRoleIdValidation = this.validateJobRoleId(data.jobRoleId);
     const cvTextValidation = this.validateCvText(data.cvText);
 

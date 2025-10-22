@@ -99,6 +99,20 @@ export class ApplicationService {
     }));
   }
 
+  async getApplicationsByUserId(userId: number) {
+    if (!userId || !Number.isInteger(userId) || userId <= 0) {
+      throw new ValidationError("Valid user ID is required");
+    }
+
+    const applications = await this.applicationRepository.findByUserId(userId);
+
+    // Convert createdAt string to Date object for frontend
+    return applications.map((app) => ({
+      ...app,
+      createdAt: new Date(app.createdAt),
+    }));
+  }
+
   async hireApplicant(applicationId: number) {
     // Validate application ID
     if (!applicationId || !Number.isInteger(applicationId) || applicationId <= 0) {

@@ -103,6 +103,37 @@ export class ApplicationController {
     }
   };
 
+  getApplicationsByUserId = async (req: Request, res: Response): Promise<void> => {
+    try {
+      const { userId } = req.params;
+
+      if (!userId) {
+        res.status(400).json({
+          error: "User ID is required",
+        });
+        return;
+      }
+
+      const id = Number.parseInt(userId, 10);
+
+      if (Number.isNaN(id)) {
+        res.status(400).json({
+          error: "Invalid user ID",
+        });
+        return;
+      }
+
+      const applications = await this.service.getApplicationsByUserId(id);
+
+      res.json({
+        data: applications,
+        count: applications.length,
+      });
+    } catch (error) {
+      handleError(error, res, "Failed to fetch applications");
+    }
+  };
+
   hireApplicant = async (req: Request, res: Response): Promise<void> => {
     try {
       const { id } = req.params;

@@ -13,6 +13,9 @@ router.get("/:id", controller.getApplicationById);
 // GET /api/applications/job/:jobRoleId - Get all applications for a job role (no authentication required)
 router.get("/job/:jobRoleId", controller.getApplicationsByJobRole);
 
+// GET /api/applications/user/:userId - Get all applications for a user (no authentication required)
+router.get("/user/:userId", controller.getApplicationsByUserId);
+
 // PUT /api/applications/:id/hire - Hire an applicant (no authentication required)
 router.put("/:id/hire", controller.hireApplicant);
 

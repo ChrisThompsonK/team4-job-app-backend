@@ -143,7 +143,7 @@ describe("ApplicationValidator", () => {
       const result = validator.validateApplication(invalidData);
 
       expect(result.isValid).toBe(false);
-      expect(result.errors).toHaveLength(2); // Only jobRoleId and cvText errors
+      expect(result.errors).toHaveLength(2); // jobRoleId, cvText errors
       expect(result.errors.some((e) => e.field === "jobRoleId")).toBe(true);
       expect(result.errors.some((e) => e.field === "cvText")).toBe(true);
     });
