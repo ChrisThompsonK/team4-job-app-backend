@@ -125,7 +125,8 @@ router.get("/cv/:applicationId/download", async (req: Request, res: Response): P
         error: "CV file not found",
       });
       return;
-    } // Set headers to force download
+    }
+    // Set headers to force download
     res.setHeader("Content-Type", application.cvFileType);
     res.setHeader("Content-Length", application.cvFileSize);
     res.setHeader("Content-Disposition", `attachment; filename="${application.cvFileName}"`);
