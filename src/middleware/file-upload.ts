@@ -49,7 +49,7 @@ function fileFilter(_req: Request, file: Express.Multer.File, cb: multer.FileFil
   // Check file extension
   const fileExtension = path.extname(file.originalname).toLowerCase();
   const isValidExtension = FILE_UPLOAD_CONFIG.ALLOWED_CV_EXTENSIONS.some(
-    (ext) => ext === fileExtension
+    (ext) => ext.toLowerCase() === fileExtension
   );
 
   if (isValidMimeType && isValidExtension) {
