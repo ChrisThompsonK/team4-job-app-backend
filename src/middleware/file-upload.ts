@@ -51,11 +51,9 @@ function fileFilter(_req: Request, file: Express.Multer.File, cb: multer.FileFil
   const fileExtension = path.extname(file.originalname).toLowerCase();
   const isValidExtension = FILE_UPLOAD_CONFIG.ALLOWED_CV_EXTENSIONS.some(
     (ext) => ext === fileExtension
-  ); // Additional MIME type verification using the mime-types library
-  const expectedMimeType = mimeTypes.lookup(file.originalname);
-  const isMimeTypeConsistent = expectedMimeType === file.mimetype;
+  );
 
-  if (isValidMimeType && isValidExtension && isMimeTypeConsistent) {
+  if (isValidMimeType && isValidExtension) {
     cb(null, true);
   } else {
     const error = new Error(
