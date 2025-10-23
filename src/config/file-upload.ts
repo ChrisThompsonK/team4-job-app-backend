@@ -3,7 +3,12 @@ import path from "node:path";
 // File upload configuration constants
 export const FILE_UPLOAD_CONFIG = {
   // Upload directories (from environment)
-  CV_UPLOAD_DIR: process.env.CV_UPLOAD_DIR as string,
+  CV_UPLOAD_DIR: (() => {
+    if (!process.env.CV_UPLOAD_DIR) {
+      throw new Error("Environment variable CV_UPLOAD_DIR is not set.");
+    }
+    return process.env.CV_UPLOAD_DIR;
+  })(),
 
   // File size limits (from environment)
   MAX_CV_FILE_SIZE: Number(process.env.MAX_CV_FILE_SIZE),
