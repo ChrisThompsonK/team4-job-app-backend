@@ -52,9 +52,9 @@ export class JobRoleService {
     this.applicationRepository = applicationRepository || new ApplicationRepository();
   }
 
-  async getAllJobRoles(limit?: number, offset?: number) {
-    const jobs = await this.repository.findAll(limit, offset);
-    const total = await this.repository.count();
+  async getAllJobRoles(limit?: number, offset?: number, search?: string) {
+    const jobs = await this.repository.findAll(limit, offset, search);
+    const total = await this.repository.count(search);
 
     // Convert closingDate string to Date object for frontend
     return {
