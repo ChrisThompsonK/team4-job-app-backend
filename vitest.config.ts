@@ -14,6 +14,8 @@ export default defineConfig({
       CV_UPLOAD_DIR: "./uploads/cvs",
       MAX_CV_FILE_SIZE: "10485760",
       ALLOWED_CV_EXTENSIONS: "doc,docx,pdf",
+      ALLOWED_CV_MIME_TYPES:
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/msword,application/pdf",
     },
 
     // Global test settings

@@ -8,12 +8,8 @@ export const FILE_UPLOAD_CONFIG = {
   // File size limits (from environment)
   MAX_CV_FILE_SIZE: Number(process.env.MAX_CV_FILE_SIZE),
 
-  // Allowed MIME types for CV files
-  ALLOWED_CV_MIME_TYPES: [
-    "application/vnd.openxmlformats-officedocument.wordprocessingml.document", // .docx
-    "application/msword", // .doc
-    "application/pdf", // .pdf
-  ] as const,
+  // Allowed MIME types for CV files (from environment)
+  ALLOWED_CV_MIME_TYPES: (process.env.ALLOWED_CV_MIME_TYPES as string).split(","),
 
   // Allowed file extensions (from environment)
   ALLOWED_CV_EXTENSIONS: (process.env.ALLOWED_CV_EXTENSIONS as string)

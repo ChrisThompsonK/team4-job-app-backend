@@ -5,10 +5,15 @@ import { FILE_UPLOAD_CONFIG } from "../config/file-upload.js";
 
 /**
  * Get MIME type from file extension using mime-types package
+ * Returns null if MIME type cannot be determined, allowing caller to handle gracefully
  */
-export function getMimeTypeFromExtension(fileName: string): string {
+export function getMimeTypeFromExtension(fileName: string): string | null {
   const mimeType = mimeTypes.lookup(fileName);
-  return typeof mimeType === "string" ? mimeType : "application/octet-stream";
+  if (!mimeType) {
+    console.warn(`Unable to determine MIME type for file: ${fileName}`);
+    return null;
+  }
+  return mimeType;
 }
 
 /**
@@ -53,7 +58,7 @@ export async function getFileInfo(filePath: string): Promise<{
 
     return {
       size: stats.size,
-      mimeType,
+      mimeType: mimeType || "application/octet-stream", // Fallback for unknown types
       exists: true,
     };
   } catch {

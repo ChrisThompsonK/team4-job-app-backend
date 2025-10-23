@@ -264,7 +264,7 @@ router.get("/verify-file/:applicationId", async (req: Request, res: Response): P
         accessible = true;
 
         // Determine MIME type from extension
-        actualMimeType = getMimeTypeFromExtension(application.cvFileName);
+        actualMimeType = getMimeTypeFromExtension(application.cvFileName) || "unknown";
       } catch (error) {
         console.error(`Error accessing file ${application.cvFilePath}:`, error);
       }
