@@ -194,10 +194,11 @@ router.get("/cv/:applicationId/info", async (req: Request, res: Response): Promi
         fileSize: application.cvFileSize,
         fileSizeFormatted: `${(application.cvFileSize / (1024 * 1024)).toFixed(2)} MB`,
         exists: fileExistsResult,
-        actualSize: fileInfo.size,
-        actualMimeType: fileInfo.mimeType,
-        isConsistent:
-          fileInfo.size === application.cvFileSize && fileInfo.mimeType === application.cvFileType,
+        actualSize: fileExistsResult ? fileInfo.size : null,
+        actualMimeType: fileExistsResult ? fileInfo.mimeType : null,
+        isConsistent: fileExistsResult
+          ? fileInfo.size === application.cvFileSize && fileInfo.mimeType === application.cvFileType
+          : false,
       },
     });
   } catch (error) {
