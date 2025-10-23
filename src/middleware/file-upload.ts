@@ -125,6 +125,7 @@ export const handleUploadError = (
       error: error.message,
     });
     return;
-  } // Pass other errors to the next error handler
+  }
+  // Pass other errors to the next error handler
   next(error);
 };
