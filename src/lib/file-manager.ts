@@ -1,7 +1,7 @@
 import fs from "node:fs/promises";
 import path from "node:path";
-import { FILE_UPLOAD_CONFIG } from "../config/file-upload.js";
 import mimeTypes from "mime-types";
+import { FILE_UPLOAD_CONFIG } from "../config/file-upload.js";
 
 /**
  * Get MIME type from file extension using mime-types package
