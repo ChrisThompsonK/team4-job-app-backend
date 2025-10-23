@@ -83,14 +83,12 @@ export class JobRoleController {
 
       // Parse filter parameters - only include defined values
       const filters: { location?: string; capability?: string; band?: string } = {};
-      if (typeof location === "string") {
-        filters.location = location;
-      }
-      if (typeof capability === "string") {
-        filters.capability = capability;
-      }
-      if (typeof band === "string") {
-        filters.band = band;
+      const filterKeys: Array<keyof typeof filters> = ["location", "capability", "band"];
+      for (const key of filterKeys) {
+        const value = req.query[key];
+        if (typeof value === "string") {
+          filters[key] = value;
+        }
       }
 
       const result = await this.service.getAllJobRoles(
