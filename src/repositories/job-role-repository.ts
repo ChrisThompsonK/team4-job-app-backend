@@ -87,7 +87,10 @@ export class JobRoleRepository {
     return result[0] || null;
   }
 
-  async count(search?: string) {
+  async count(
+    search?: string,
+    filters?: { location?: string; capability?: string; band?: string }
+  ) {
     let query = db.select({ count: sql<number>`count(*)` }).from(jobRoles);
 
     const conditions = this.buildWhereConditions(search, filters);
