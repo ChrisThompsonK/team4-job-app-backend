@@ -1,6 +1,6 @@
 import bcrypt from "bcryptjs";
 import { db } from "./index.js";
-import { type JobRoleStatus, jobRoles, users } from "./schema.js";
+import { type JobRoleStatus, applications, jobRoles, users } from "./schema.js";
 
 const sampleJobs = [
   {
@@ -205,7 +205,9 @@ async function seed() {
 
   try {
     // Clear existing data (for development seeding)
+    // Must delete in correct order due to foreign key constraints
     console.log("🧹 Clearing existing data...");
+    await db.delete(applications); // Delete applications first (child table)
     await db.delete(jobRoles);
     await db.delete(users);
     console.log("✅ Existing data cleared!");
