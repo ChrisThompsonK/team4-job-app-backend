@@ -1,3 +1,4 @@
+import path from "node:path";
 import type { Request, Response } from "express";
 import express from "express";
 import { cleanupOldFiles, fileExists, getMimeTypeFromExtension } from "../lib/file-manager.js";
@@ -92,7 +93,7 @@ router.get("/file-stats", async (_req: Request, res: Response): Promise<void> =>
       totalSize += app.cvFileSize;
 
       // Count file types
-      const extension = app.cvFileName.split(".").pop()?.toLowerCase() || "unknown";
+      const extension = path.extname(app.cvFileName).toLowerCase() || "unknown";
       fileTypes[extension] = (fileTypes[extension] || 0) + 1;
 
       // Check if file exists
