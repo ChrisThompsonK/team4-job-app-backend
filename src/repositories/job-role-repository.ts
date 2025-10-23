@@ -1,39 +1,37 @@
-import { eq, like, sql } from "drizzle-orm";
+import { and, eq, like, sql } from "drizzle-orm";
 import { db } from "../db/index.js";
 import type { JobRole, NewJobRole } from "../db/schema.js";
 import { applications, jobRoles } from "../db/schema.js";
 
 export class JobRoleRepository {
   /**
-   * Helper method to apply search filter if search term is provided
+   * Helper method to build all WHERE conditions (search + filters)
    */
-  private applySearchFilter(query: any, search?: string): any {
-    if (search && search.trim()) {
-      return query.where(like(jobRoles.name, `%${search}%`));
-    }
-    return query;
-  }
-
-  /**
-   * Helper method to apply additional filters (location, capability, band)
-   */
-  private applyFilters(
-    query: any,
+  private buildWhereConditions(
+    search?: string,
     filters?: { location?: string; capability?: string; band?: string }
-  ): any {
-    if (!filters) return query;
+  ) {
+    const conditions = [];
 
-    if (filters.location && filters.location.trim()) {
-      query = query.where(eq(jobRoles.location, filters.location));
-    }
-    if (filters.capability && filters.capability.trim()) {
-      query = query.where(eq(jobRoles.capability, filters.capability));
-    }
-    if (filters.band && filters.band.trim()) {
-      query = query.where(eq(jobRoles.band, filters.band));
+    // Add search condition
+    if (search?.trim()) {
+      conditions.push(like(jobRoles.name, `%${search}%`));
     }
 
-    return query;
+    // Add filter conditions
+    if (filters) {
+      if (filters.location?.trim()) {
+        conditions.push(eq(jobRoles.location, filters.location));
+      }
+      if (filters.capability?.trim()) {
+        conditions.push(eq(jobRoles.capability, filters.capability));
+      }
+      if (filters.band?.trim()) {
+        conditions.push(eq(jobRoles.band, filters.band));
+      }
+    }
+
+    return conditions;
   }
 
   async findAll(
@@ -43,8 +41,12 @@ export class JobRoleRepository {
     filters?: { location?: string; capability?: string; band?: string }
   ) {
     let query = db.select().from(jobRoles);
-    query = this.applySearchFilter(query, search);
-    query = this.applyFilters(query, filters);
+
+    const conditions = this.buildWhereConditions(search, filters);
+    if (conditions.length > 0) {
+      query = query.where(and(...conditions)) as typeof query;
+    }
+
     query = query.orderBy(jobRoles.id) as typeof query;
 
     if (limit !== undefined && offset !== undefined) {
@@ -90,8 +92,12 @@ export class JobRoleRepository {
     filters?: { location?: string; capability?: string; band?: string }
   ) {
     let query = db.select({ count: sql<number>`count(*)` }).from(jobRoles);
-    query = this.applySearchFilter(query, search);
-    query = this.applyFilters(query, filters);
+
+    const conditions = this.buildWhereConditions(search, filters);
+    if (conditions.length > 0) {
+      query = query.where(and(...conditions)) as typeof query;
+    }
+
     const result = await query;
     return result[0]?.count || 0;
   }

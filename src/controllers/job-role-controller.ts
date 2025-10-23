@@ -68,7 +68,7 @@ export class JobRoleController {
   getAllJobRoles = async (req: Request, res: Response): Promise<void> => {
     try {
       // Parse query parameters for pagination and search
-      const { limit, offset, search, location, capability, band } = req.query;
+      const { limit, offset, search } = req.query;
       const paginationResult = parsePaginationParams(limit, offset);
 
       if (!paginationResult.isValid) {
