@@ -1,23 +1,14 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 import { FILE_UPLOAD_CONFIG } from "../config/file-upload.js";
+import mimeTypes from "mime-types";
 
 /**
- * Get MIME type from file extension
+ * Get MIME type from file extension using mime-types package
  */
 export function getMimeTypeFromExtension(fileName: string): string {
-  const extension = path.extname(fileName).toLowerCase();
-
-  switch (extension) {
-    case ".doc":
-      return "application/msword";
-    case ".docx":
-      return "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
-    case ".png":
-      return "image/png";
-    default:
-      return "application/octet-stream";
-  }
+  const mimeType = mimeTypes.lookup(fileName);
+  return typeof mimeType === "string" ? mimeType : "application/octet-stream";
 }
 
 /**
