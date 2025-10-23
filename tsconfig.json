@@ -11,7 +11,6 @@
     "noEmitOnError": true,
     "declaration": true,
     "outDir": "dist",
-    "rootDir": ".",
     "removeComments": true,
     "strict": true,
     "noImplicitAny": true,
@@ -27,6 +26,6 @@
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true
   },
-  "include": ["src/**/*", "**/*.test.ts", "**/*.spec.ts", "vitest.config.ts"],
+  "include": ["src/**/*"],
   "exclude": ["node_modules", "dist"]
 }
