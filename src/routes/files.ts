@@ -62,9 +62,15 @@ router.get("/cv/:applicationId", async (req: Request, res: Response): Promise<vo
 
     // Get file info
     const _fileInfo = await getFileInfo(filePath); // Set appropriate headers
-    res.setHeader("Content-Type", _fileInfo?.mimeType || application.cvFileType || "application/octet-stream");
+    res.setHeader(
+      "Content-Type",
+      _fileInfo?.mimeType || application.cvFileType || "application/octet-stream"
+    );
     res.setHeader("Content-Length", _fileInfo?.size || application.cvFileSize || 0);
-    res.setHeader("Content-Disposition", `inline; filename="${_fileInfo?.name || application.cvFileName || "file"}"`);
+    res.setHeader(
+      "Content-Disposition",
+      `inline; filename="${_fileInfo?.name || application.cvFileName || "file"}"`
+    );
 
     // Serve the file
     res.sendFile(path.resolve(filePath));
