@@ -444,7 +444,6 @@ team4-job-app-backend/
 │   └── database.sqlite     # SQLite database file
 ├── drizzle/                # Database migrations
 ├── dist/                   # Compiled JavaScript output
-├── test-file-upload.js     # File upload testing script
 ├── drizzle.config.ts       # Drizzle ORM configuration
 ├── package.json            # Project dependencies and scripts
 ├── tsconfig.json           # TypeScript configuration
