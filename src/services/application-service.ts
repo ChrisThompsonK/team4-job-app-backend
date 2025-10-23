@@ -242,7 +242,7 @@ export class ApplicationService {
       await deleteFile(application.cvFilePath);
     } catch (error) {
       // Log error but don't fail the operation
-      console.error(`Warning: Failed to delete CV file ${application.cvFilePath}:`, error);
+      console.warn(`Failed to delete CV file ${application.cvFilePath}:`, error);
     }
 
     return {
