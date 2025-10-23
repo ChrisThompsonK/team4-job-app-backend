@@ -25,11 +25,11 @@ export async function deleteFile(filePath: string): Promise<void> {
     console.log(`File deleted: ${filePath}`);
   } catch (error: unknown) {
     // If file doesn't exist, that's fine - it's already "deleted"
-    if (error instanceof Error && "code" in error && error.code !== "ENOENT") {
-      console.error(`Error deleting file ${filePath}:`, error);
-      throw error;
+    const err = error as NodeJS.ErrnoException;
+    if (err instanceof Error && err.code !== "ENOENT") {
+      console.error(`Error deleting file ${filePath}:`, err);
+      throw err;
     }
-  }
 }
 
 /**
