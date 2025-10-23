@@ -48,8 +48,7 @@ router.post("/cleanup-files", async (req: Request, res: Response): Promise<void>
       });
     } else {
       // Actually perform cleanup
-      await cleanupOldFiles(daysOld);
-      cleanedFiles++;
+      cleanedFiles = await cleanupOldFiles(daysOld);
 
       res.json({
         success: true,
