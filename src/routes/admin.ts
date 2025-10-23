@@ -1,5 +1,5 @@
-import express from "express";
 import type { Request, Response } from "express";
+import express from "express";
 import { cleanupOldFiles, fileExists } from "../lib/file-manager.js";
 import { ApplicationRepository } from "../repositories/application-repository.js";
 
@@ -9,7 +9,7 @@ const applicationRepository = new ApplicationRepository();
 /**
  * Cleanup old files that are no longer referenced in the database
  * POST /api/admin/cleanup-files
- * 
+ *
  * Note: This should be protected with admin authentication in production
  */
 router.post("/cleanup-files", async (req: Request, res: Response): Promise<void> => {
@@ -26,15 +26,17 @@ router.post("/cleanup-files", async (req: Request, res: Response): Promise<void>
 
     // Get all applications with their file paths
     const applications = await applicationRepository.findAll();
-    const referencedFiles = new Set(applications.map((app: { cvFilePath: string }) => app.cvFilePath));
+    const referencedFiles = new Set(
+      applications.map((app: { cvFilePath: string }) => app.cvFilePath)
+    );
 
     let cleanedFiles = 0;
-    let errors: string[] = [];
+    const errors: string[] = [];
 
     if (dryRun) {
       // Just report what would be cleaned
       await cleanupOldFiles(daysOld);
-      
+
       res.json({
         success: true,
         message: "Dry run completed - no files were actually deleted",
@@ -72,10 +74,10 @@ router.post("/cleanup-files", async (req: Request, res: Response): Promise<void>
 /**
  * Get file system statistics
  * GET /api/admin/file-stats
- * 
+ *
  * Note: This should be protected with admin authentication in production
  */
-router.get("/file-stats", async (req: Request, res: Response): Promise<void> => {
+router.get("/file-stats", async (_req: Request, res: Response): Promise<void> => {
   try {
     // Get all applications
     const applications = await applicationRepository.findAll();
@@ -83,7 +85,7 @@ router.get("/file-stats", async (req: Request, res: Response): Promise<void> => 
     let totalFiles = 0;
     let totalSize = 0;
     let missingFiles = 0;
-    let fileTypes: Record<string, number> = {};
+    const fileTypes: Record<string, number> = {};
 
     // Check each file
     for (const app of applications) {
@@ -91,7 +93,7 @@ router.get("/file-stats", async (req: Request, res: Response): Promise<void> => 
       totalSize += app.cvFileSize;
 
       // Count file types
-      const extension = app.cvFileName.split('.').pop()?.toLowerCase() || 'unknown';
+      const extension = app.cvFileName.split(".").pop()?.toLowerCase() || "unknown";
       fileTypes[extension] = (fileTypes[extension] || 0) + 1;
 
       // Check if file exists
@@ -110,9 +112,11 @@ router.get("/file-stats", async (req: Request, res: Response): Promise<void> => 
         totalSizeBytes: totalSize,
         totalSizeFormatted: `${(totalSize / (1024 * 1024)).toFixed(2)} MB`,
         averageFileSizeBytes: totalFiles > 0 ? Math.round(totalSize / totalFiles) : 0,
-        averageFileSizeFormatted: totalFiles > 0 ? `${((totalSize / totalFiles) / (1024 * 1024)).toFixed(2)} MB` : "0 MB",
+        averageFileSizeFormatted:
+          totalFiles > 0 ? `${(totalSize / totalFiles / (1024 * 1024)).toFixed(2)} MB` : "0 MB",
         fileTypes,
-        healthScore: totalFiles > 0 ? Math.round(((totalFiles - missingFiles) / totalFiles) * 100) : 100,
+        healthScore:
+          totalFiles > 0 ? Math.round(((totalFiles - missingFiles) / totalFiles) * 100) : 100,
       },
     });
   } catch (error) {
@@ -127,13 +131,13 @@ router.get("/file-stats", async (req: Request, res: Response): Promise<void> => 
 /**
  * Validate all files in the system for integrity
  * GET /api/admin/validate-all-files
- * 
+ *
  * Note: This should be protected with admin authentication in production
  */
-router.get("/validate-all-files", async (req: Request, res: Response): Promise<void> => {
+router.get("/validate-all-files", async (_req: Request, res: Response): Promise<void> => {
   try {
     const applications = await applicationRepository.findAll();
-    
+
     const results = [];
     let validFiles = 0;
     let invalidFiles = 0;
@@ -141,14 +145,16 @@ router.get("/validate-all-files", async (req: Request, res: Response): Promise<v
 
     for (const application of applications) {
       const exists = await fileExists(application.cvFilePath);
-      
+
       let actualSize = 0;
       let accessible = false;
       let sizeMismatch = false;
 
       if (exists) {
         try {
-          const stats = await import("node:fs/promises").then(fs => fs.stat(application.cvFilePath));
+          const stats = await import("node:fs/promises").then((fs) =>
+            fs.stat(application.cvFilePath)
+          );
           actualSize = stats.size;
           accessible = true;
           sizeMismatch = actualSize !== application.cvFileSize;
@@ -159,7 +165,7 @@ router.get("/validate-all-files", async (req: Request, res: Response): Promise<v
       }
 
       const isValid = exists && accessible && !sizeMismatch;
-      
+
       if (isValid) {
         validFiles++;
       } else {
@@ -168,7 +174,7 @@ router.get("/validate-all-files", async (req: Request, res: Response): Promise<v
 
       const issues = [
         !exists && "File missing",
-        !accessible && "File inaccessible", 
+        !accessible && "File inaccessible",
         sizeMismatch && `Size mismatch: stored ${application.cvFileSize}, actual ${actualSize}`,
       ].filter(Boolean);
 
@@ -190,7 +196,8 @@ router.get("/validate-all-files", async (req: Request, res: Response): Promise<v
           invalidFiles,
           totalSizeBytes: totalSize,
           totalSizeFormatted: `${(totalSize / (1024 * 1024)).toFixed(2)} MB`,
-          healthScore: applications.length > 0 ? Math.round((validFiles / applications.length) * 100) : 100,
+          healthScore:
+            applications.length > 0 ? Math.round((validFiles / applications.length) * 100) : 100,
         },
         details: results,
       },
@@ -207,7 +214,7 @@ router.get("/validate-all-files", async (req: Request, res: Response): Promise<v
 /**
  * Verify file integrity for a specific application
  * GET /api/admin/verify-file/:applicationId
- * 
+ *
  * Note: This should be protected with admin authentication in production
  */
 router.get("/verify-file/:applicationId", async (req: Request, res: Response): Promise<void> => {
@@ -243,7 +250,7 @@ router.get("/verify-file/:applicationId", async (req: Request, res: Response): P
 
     // Check file existence and get actual info
     const exists = await fileExists(application.cvFilePath);
-    
+
     let actualSize = 0;
     let actualMimeType = "unknown";
     let accessible = false;
@@ -251,24 +258,27 @@ router.get("/verify-file/:applicationId", async (req: Request, res: Response): P
     if (exists) {
       try {
         // Try to get file stats
-        const stats = await import("node:fs/promises").then(fs => fs.stat(application.cvFilePath));
+        const stats = await import("node:fs/promises").then((fs) =>
+          fs.stat(application.cvFilePath)
+        );
         actualSize = stats.size;
         accessible = true;
 
         // Determine MIME type from extension
-        const extension = application.cvFileName.split('.').pop()?.toLowerCase();
+        const extension = application.cvFileName.split(".").pop()?.toLowerCase();
         switch (extension) {
-          case 'doc':
-            actualMimeType = 'application/msword';
+          case "doc":
+            actualMimeType = "application/msword";
             break;
-          case 'docx':
-            actualMimeType = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+          case "docx":
+            actualMimeType =
+              "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
             break;
-          case 'png':
-            actualMimeType = 'image/png';
+          case "png":
+            actualMimeType = "image/png";
             break;
           default:
-            actualMimeType = 'application/octet-stream';
+            actualMimeType = "application/octet-stream";
         }
       } catch (error) {
         console.error(`Error accessing file ${application.cvFilePath}:`, error);
@@ -294,9 +304,11 @@ router.get("/verify-file/:applicationId", async (req: Request, res: Response): P
         mimeTypeMismatch: actualMimeType !== application.cvFileType,
         issues: [
           !exists && "File does not exist",
-          !accessible && "File exists but is not accessible", 
-          actualSize !== application.cvFileSize && `Size mismatch: stored ${application.cvFileSize}, actual ${actualSize}`,
-          actualMimeType !== application.cvFileType && `MIME type mismatch: stored ${application.cvFileType}, actual ${actualMimeType}`,
+          !accessible && "File exists but is not accessible",
+          actualSize !== application.cvFileSize &&
+            `Size mismatch: stored ${application.cvFileSize}, actual ${actualSize}`,
+          actualMimeType !== application.cvFileType &&
+            `MIME type mismatch: stored ${application.cvFileType}, actual ${actualMimeType}`,
         ].filter(Boolean),
       },
     });
@@ -312,7 +324,7 @@ router.get("/verify-file/:applicationId", async (req: Request, res: Response): P
 /**
  * Bulk operation to clean up orphaned files
  * POST /api/admin/cleanup-orphaned-files
- * 
+ *
  * Note: This should be protected with admin authentication in production
  */
 router.post("/cleanup-orphaned-files", async (req: Request, res: Response): Promise<void> => {
@@ -321,12 +333,14 @@ router.post("/cleanup-orphaned-files", async (req: Request, res: Response): Prom
 
     // Get all file paths from the database
     const applications = await applicationRepository.findAll();
-    const referencedFiles = new Set(applications.map((app: { cvFilePath: string }) => app.cvFilePath));
+    const referencedFiles = new Set(
+      applications.map((app: { cvFilePath: string }) => app.cvFilePath)
+    );
 
     const fs = await import("node:fs/promises");
     const path = await import("node:path");
     const uploadsDir = "./uploads/cvs";
-    
+
     let foundFiles = 0;
     let orphanedFiles = 0;
     let cleanedFiles = 0;
@@ -335,20 +349,20 @@ router.post("/cleanup-orphaned-files", async (req: Request, res: Response): Prom
     async function scanDirectory(dirPath: string): Promise<void> {
       try {
         const entries = await fs.readdir(dirPath, { withFileTypes: true });
-        
+
         for (const entry of entries) {
           const fullPath = path.join(dirPath, entry.name);
-          
+
           if (entry.isDirectory()) {
             await scanDirectory(fullPath);
           } else {
             foundFiles++;
-            
+
             // Check if this file is referenced in the database
             if (!referencedFiles.has(fullPath)) {
               orphanedFiles++;
               orphanedFilePaths.push(fullPath);
-              
+
               if (!dryRun) {
                 try {
                   await fs.unlink(fullPath);
@@ -369,13 +383,15 @@ router.post("/cleanup-orphaned-files", async (req: Request, res: Response): Prom
     try {
       await fs.access(uploadsDir);
       await scanDirectory(uploadsDir);
-    } catch (error) {
+    } catch (_error) {
       console.log("Uploads directory does not exist yet");
     }
 
     res.json({
       success: true,
-      message: dryRun ? "Dry run completed - no files were actually deleted" : "Orphaned file cleanup completed",
+      message: dryRun
+        ? "Dry run completed - no files were actually deleted"
+        : "Orphaned file cleanup completed",
       data: {
         foundFiles,
         referencedFiles: referencedFiles.size,

@@ -112,9 +112,10 @@ export async function cleanupOldFiles(daysOld: number = 30): Promise<void> {
 /**
  * Validate uploaded file
  */
-export function validateUploadedFile(
-  file: Express.Multer.File,
-): { isValid: boolean; error?: string } {
+export function validateUploadedFile(file: Express.Multer.File): {
+  isValid: boolean;
+  error?: string;
+} {
   try {
     // Check file size
     if (file.size > FILE_UPLOAD_CONFIG.MAX_CV_FILE_SIZE) {
@@ -125,7 +126,11 @@ export function validateUploadedFile(
     }
 
     // Check file type
-    if (!FILE_UPLOAD_CONFIG.ALLOWED_CV_MIME_TYPES.includes(file.mimetype as any)) {
+    if (
+      !FILE_UPLOAD_CONFIG.ALLOWED_CV_MIME_TYPES.includes(
+        file.mimetype as (typeof FILE_UPLOAD_CONFIG.ALLOWED_CV_MIME_TYPES)[number]
+      )
+    ) {
       return {
         isValid: false,
         error: `File type ${file.mimetype} is not allowed`,

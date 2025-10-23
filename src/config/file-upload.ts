@@ -16,9 +16,11 @@ export const FILE_UPLOAD_CONFIG = {
   ] as const,
 
   // Allowed file extensions (configurable via environment)
-  ALLOWED_CV_EXTENSIONS: process.env.ALLOWED_CV_EXTENSIONS 
-    ? process.env.ALLOWED_CV_EXTENSIONS.split(',').map(ext => ext.startsWith('.') ? ext : `.${ext}`)
-    : [".doc", ".docx", ".png"] as const,
+  ALLOWED_CV_EXTENSIONS: process.env.ALLOWED_CV_EXTENSIONS
+    ? process.env.ALLOWED_CV_EXTENSIONS.split(",").map((ext) =>
+        ext.startsWith(".") ? ext : `.${ext}`
+      )
+    : ([".doc", ".docx", ".png"] as const),
 
   // File naming strategy
   generateFileName: (originalName: string): string => {

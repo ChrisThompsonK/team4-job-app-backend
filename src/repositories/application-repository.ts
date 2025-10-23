@@ -123,8 +123,7 @@ export class ApplicationRepository {
   }
 
   async findAll() {
-    const results = await this.getApplicationWithUserQuery()
-      .orderBy(desc(applications.createdAt));
+    const results = await this.getApplicationWithUserQuery().orderBy(desc(applications.createdAt));
 
     return results.map((r) => this.mapApplicationWithUser(r));
   }

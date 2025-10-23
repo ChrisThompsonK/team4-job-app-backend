@@ -72,7 +72,7 @@ app.get("/", (_req, res) => {
 
       // Admin endpoints (no authentication required - should be protected in production)
       adminCleanupFiles: "POST /api/admin/cleanup-files",
-      adminFileStats: "GET /api/admin/file-stats", 
+      adminFileStats: "GET /api/admin/file-stats",
       adminVerifyFile: "GET /api/admin/verify-file/:applicationId",
       adminValidateAllFiles: "GET /api/admin/validate-all-files",
       adminCleanupOrphanedFiles: "POST /api/admin/cleanup-orphaned-files",
