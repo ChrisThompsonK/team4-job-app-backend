@@ -1,11 +1,23 @@
-import { eq, sql } from "drizzle-orm";
+import { eq, like, sql } from "drizzle-orm";
 import { db } from "../db/index.js";
 import type { JobRole, NewJobRole } from "../db/schema.js";
 import { applications, jobRoles } from "../db/schema.js";
 
 export class JobRoleRepository {
-  async findAll(limit?: number, offset?: number) {
-    const query = db.select().from(jobRoles).orderBy(jobRoles.id);
+  /**
+   * Helper method to apply search filter if search term is provided
+   */
+  private applySearchFilter(query: any, search?: string): any {
+    if (search && search.trim()) {
+      return query.where(like(jobRoles.name, `%${search}%`));
+    }
+    return query;
+  }
+
+  async findAll(limit?: number, offset?: number, search?: string) {
+    let query = db.select().from(jobRoles);
+    query = this.applySearchFilter(query, search);
+    query = query.orderBy(jobRoles.id) as typeof query;
 
     if (limit !== undefined && offset !== undefined) {
       return await query.limit(limit).offset(offset);
@@ -45,8 +57,10 @@ export class JobRoleRepository {
     return result[0] || null;
   }
 
-  async count() {
-    const result = await db.select({ count: sql<number>`count(*)` }).from(jobRoles);
+  async count(search?: string) {
+    let query = db.select({ count: sql<number>`count(*)` }).from(jobRoles);
+    query = this.applySearchFilter(query, search);
+    const result = await query;
     return result[0]?.count || 0;
   }
 
