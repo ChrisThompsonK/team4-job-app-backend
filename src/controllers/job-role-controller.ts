@@ -81,11 +81,7 @@ export class JobRoleController {
       const { limit: parsedLimit, offset: parsedOffset } = paginationResult.params || {};
       const searchQuery = typeof search === "string" ? search : undefined;
 
-      const result = await this.service.getAllJobRoles(
-        parsedLimit,
-        parsedOffset,
-        searchQuery
-      );
+      const result = await this.service.getAllJobRoles(parsedLimit, parsedOffset, searchQuery);
 
       res.json({
         success: true,

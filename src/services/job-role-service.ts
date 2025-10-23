@@ -52,11 +52,7 @@ export class JobRoleService {
     this.applicationRepository = applicationRepository || new ApplicationRepository();
   }
 
-  async getAllJobRoles(
-    limit?: number,
-    offset?: number,
-    search?: string
-  ) {
+  async getAllJobRoles(limit?: number, offset?: number, search?: string) {
     const jobs = await this.repository.findAll(limit, offset, search);
     const total = await this.repository.count(search);
 
