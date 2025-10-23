@@ -110,7 +110,7 @@ export class JobRoleController {
           offset: parsedOffset,
         },
         search: searchQuery,
-        filters: filters,
+        filters,
       });
     } catch (error) {
       handleError(error, res, "Failed to fetch job roles");
