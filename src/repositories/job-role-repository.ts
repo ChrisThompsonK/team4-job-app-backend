@@ -4,47 +4,14 @@ import type { JobRole, NewJobRole } from "../db/schema.js";
 import { applications, jobRoles } from "../db/schema.js";
 
 export class JobRoleRepository {
-  /**
-   * Helper method to apply search filter if search term is provided
-   */
-  private applySearchFilter(query: any, search?: string): any {
-    if (search && search.trim()) {
-      return query.where(like(jobRoles.name, `%${search}%`));
-    }
-    return query;
-  }
-
-  /**
-   * Helper method to apply additional filters (location, capability, band)
-   */
-  private applyFilters(
-    query: any,
-    filters?: { location?: string; capability?: string; band?: string }
-  ): any {
-    if (!filters) return query;
-
-    if (filters.location && filters.location.trim()) {
-      query = query.where(eq(jobRoles.location, filters.location));
-    }
-    if (filters.capability && filters.capability.trim()) {
-      query = query.where(eq(jobRoles.capability, filters.capability));
-    }
-    if (filters.band && filters.band.trim()) {
-      query = query.where(eq(jobRoles.band, filters.band));
-    }
-
-    return query;
-  }
-
-  async findAll(
-    limit?: number,
-    offset?: number,
-    search?: string,
-    filters?: { location?: string; capability?: string; band?: string }
-  ) {
+  async findAll(limit?: number, offset?: number, search?: string) {
     let query = db.select().from(jobRoles);
-    query = this.applySearchFilter(query, search);
-    query = this.applyFilters(query, filters);
+
+    // Apply search filter if search term is provided
+    if (search?.trim()) {
+      query = query.where(like(jobRoles.name, `%${search}%`)) as typeof query;
+    }
+
     query = query.orderBy(jobRoles.id) as typeof query;
 
     if (limit !== undefined && offset !== undefined) {
@@ -85,13 +52,14 @@ export class JobRoleRepository {
     return result[0] || null;
   }
 
-  async count(
-    search?: string,
-    filters?: { location?: string; capability?: string; band?: string }
-  ) {
+  async count(search?: string) {
     let query = db.select({ count: sql<number>`count(*)` }).from(jobRoles);
-    query = this.applySearchFilter(query, search);
-    query = this.applyFilters(query, filters);
+
+    // Apply search filter if search term is provided
+    if (search?.trim()) {
+      query = query.where(like(jobRoles.name, `%${search}%`)) as typeof query;
+    }
+
     const result = await query;
     return result[0]?.count || 0;
   }

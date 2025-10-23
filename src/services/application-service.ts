@@ -1,5 +1,6 @@
 import type { NewApplication } from "../db/schema.js";
 import { BusinessLogicError, NotFoundError, ValidationError } from "../errors/custom-errors.js";
+import { deleteFile } from "../lib/file-manager.js";
 import { ApplicationRepository } from "../repositories/application-repository.js";
 import { JobRoleRepository } from "../repositories/job-role-repository.js";
 import { ApplicationValidator } from "../validators/application-validator.js";
@@ -7,7 +8,7 @@ import { ApplicationValidator } from "../validators/application-validator.js";
 interface CreateApplicationInput {
   userId: number;
   jobRoleId: number;
-  cvText: string;
+  cvFile: Express.Multer.File;
 }
 
 export class ApplicationService {
@@ -57,22 +58,38 @@ export class ApplicationService {
       throw new BusinessLogicError("There are no open positions for this job role");
     }
 
-    // Create the application
+    // Process the uploaded file
+    const file = input.cvFile;
+
+    // The file has already been saved by multer middleware
+    // Use the path where multer stored the file
+    const actualStoragePath = file.path;
     const newApplication: NewApplication = {
       userId: input.userId,
       jobRoleId: input.jobRoleId,
-      cvText: input.cvText.trim(),
+      cvFileName: file.originalname,
+      cvFilePath: actualStoragePath,
+      cvFileType: file.mimetype,
+      cvFileSize: file.size,
       status: "in progress",
       createdAt: new Date().toISOString(),
     };
 
-    const application = await this.applicationRepository.create(newApplication);
+    try {
+      const application = await this.applicationRepository.create(newApplication);
 
-    if (!application) {
-      throw new Error("Failed to create application");
+      if (!application) {
+        // If application creation failed, clean up the uploaded file
+        await deleteFile(actualStoragePath);
+        throw new Error("Failed to create application");
+      }
+
+      return application;
+    } catch (error) {
+      // If anything goes wrong, clean up the uploaded file
+      await deleteFile(actualStoragePath);
+      throw error;
     }
-
-    return application;
   }
 
   async getApplicationById(id: number) {
@@ -201,6 +218,36 @@ export class ApplicationService {
     return {
       ...updatedApplication,
       createdAt: new Date(updatedApplication.createdAt),
+    };
+  }
+
+  async deleteApplication(applicationId: number) {
+    // Validate application ID
+    if (!applicationId || !Number.isInteger(applicationId) || applicationId <= 0) {
+      throw new ValidationError("Valid application ID is required");
+    }
+
+    // Get application to get file path for cleanup
+    const application = await this.applicationRepository.findById(applicationId);
+
+    if (!application) {
+      throw new NotFoundError("Application not found");
+    }
+
+    // Delete the application from database
+    await this.applicationRepository.delete(applicationId);
+
+    // Clean up the CV file
+    try {
+      await deleteFile(application.cvFilePath);
+    } catch (error) {
+      // Log error but don't fail the operation
+      console.warn(`Failed to delete CV file ${application.cvFilePath}:`, error);
+    }
+
+    return {
+      ...application,
+      createdAt: new Date(application.createdAt),
     };
   }
 }
