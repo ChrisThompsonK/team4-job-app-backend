@@ -1,7 +1,9 @@
 import express from "express";
 import { auth } from "./lib/auth.js";
+import adminRouter from "./routes/admin.js";
 import applicationsRouter from "./routes/applications.js";
 import authRouter from "./routes/auth.js";
+import filesRouter from "./routes/files.js";
 import jobsRouter from "./routes/jobs.js";
 
 const app = express();
@@ -28,6 +30,8 @@ app.use("/api/better-auth", auth.handler);
 app.use("/api/auth", authRouter);
 app.use("/api/jobs", jobsRouter);
 app.use("/api/applications", applicationsRouter);
+app.use("/api/files", filesRouter);
+app.use("/api/admin", adminRouter);
 
 // Health check endpoint
 app.get("/", (_req, res) => {
@@ -54,11 +58,24 @@ app.get("/", (_req, res) => {
 
       // Application endpoints (no authentication required)
       applications: "GET /api/applications",
-      createApplication: "POST /api/applications",
+      createApplication: "POST /api/applications (multipart/form-data with 'cvFile' field)",
       applicationById: "GET /api/applications/:id",
       applicationsByJobRole: "GET /api/applications/job/:jobRoleId",
       hireApplicant: "PUT /api/applications/:id/hire",
       rejectApplicant: "PUT /api/applications/:id/reject",
+      deleteApplication: "DELETE /api/applications/:id",
+
+      // File endpoints (no authentication required)
+      serveCvFile: "GET /api/files/cv/:applicationId",
+      downloadCvFile: "GET /api/files/cv/:applicationId/download",
+      fileMetadata: "GET /api/files/cv/:applicationId/info",
+
+      // Admin endpoints (no authentication required - should be protected in production)
+      adminCleanupFiles: "POST /api/admin/cleanup-files",
+      adminFileStats: "GET /api/admin/file-stats", 
+      adminVerifyFile: "GET /api/admin/verify-file/:applicationId",
+      adminValidateAllFiles: "GET /api/admin/validate-all-files",
+      adminCleanupOrphanedFiles: "POST /api/admin/cleanup-orphaned-files",
     },
   });
 }); // Start the server

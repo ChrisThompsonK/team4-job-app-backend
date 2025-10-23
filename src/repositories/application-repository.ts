@@ -116,4 +116,16 @@ export class ApplicationRepository {
       .limit(1);
     return result[0] || null;
   }
+
+  async delete(id: number) {
+    const result = await db.delete(applications).where(eq(applications.id, id)).returning();
+    return result[0] || null;
+  }
+
+  async findAll() {
+    const results = await this.getApplicationWithUserQuery()
+      .orderBy(desc(applications.createdAt));
+
+    return results.map((r) => this.mapApplicationWithUser(r));
+  }
 }

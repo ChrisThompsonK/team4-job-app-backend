@@ -1,5 +1,6 @@
 import type { Request, Response } from "express";
 import { handleError } from "../errors/custom-errors.js";
+import { deleteFile, validateUploadedFile } from "../lib/file-manager.js";
 import { ApplicationService } from "../services/application-service.js";
 
 export class ApplicationController {
@@ -11,19 +12,38 @@ export class ApplicationController {
 
   createApplication = async (req: Request, res: Response): Promise<void> => {
     try {
-      const { jobRoleId, cvText, userId } = req.body;
+      const { jobRoleId, userId } = req.body;
+      const cvFile = req.file; // This comes from multer middleware
 
-      if (!userId || !jobRoleId || !cvText) {
+      if (!userId || !jobRoleId) {
         res.status(400).json({
-          error: "User ID, job role ID, and CV text are required",
+          error: "User ID and job role ID are required",
+        });
+        return;
+      }
+
+      if (!cvFile) {
+        res.status(400).json({
+          error: "CV file is required",
+        });
+        return;
+      }
+
+      // Additional file validation
+      const fileValidation = validateUploadedFile(cvFile);
+      if (!fileValidation.isValid) {
+        // Clean up the uploaded file since validation failed
+        await deleteFile(cvFile.path);
+        res.status(400).json({
+          error: fileValidation.error || "File validation failed",
         });
         return;
       }
 
       const application = await this.service.createApplication({
-        userId: userId,
+        userId: Number.parseInt(userId, 10),
         jobRoleId: Number.parseInt(jobRoleId, 10),
-        cvText,
+        cvFile,
       });
 
       res.status(201).json({
@@ -31,6 +51,14 @@ export class ApplicationController {
         message: "Application submitted successfully",
       });
     } catch (error) {
+      // If there's an error and we have a file, clean it up
+      if (req.file) {
+        try {
+          await deleteFile(req.file.path);
+        } catch (cleanupError) {
+          console.error("Error cleaning up file after failed application:", cleanupError);
+        }
+      }
       handleError(error, res, "Failed to create application");
     }
   };
@@ -193,6 +221,37 @@ export class ApplicationController {
       });
     } catch (error) {
       handleError(error, res, "Failed to reject applicant");
+    }
+  };
+
+  deleteApplication = async (req: Request, res: Response): Promise<void> => {
+    try {
+      const { id } = req.params;
+
+      if (!id) {
+        res.status(400).json({
+          error: "Application ID is required",
+        });
+        return;
+      }
+
+      const applicationId = Number.parseInt(id, 10);
+
+      if (Number.isNaN(applicationId) || applicationId <= 0) {
+        res.status(400).json({
+          error: "Invalid application ID",
+        });
+        return;
+      }
+
+      const result = await this.service.deleteApplication(applicationId);
+
+      res.json({
+        message: "Application deleted successfully",
+        data: result,
+      });
+    } catch (error) {
+      handleError(error, res, "Failed to delete application");
     }
   };
 }

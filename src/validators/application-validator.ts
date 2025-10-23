@@ -1,3 +1,6 @@
+import path from "node:path";
+import { FILE_UPLOAD_CONFIG } from "../config/file-upload.js";
+
 interface ValidationError {
   field: string;
   message: string;
@@ -9,23 +12,65 @@ interface ValidationResult {
 }
 
 export class ApplicationValidator {
-  validateCvText(cvText: string): ValidationResult {
+  validateCvFile(file: Express.Multer.File): ValidationResult {
     const errors: ValidationError[] = [];
 
-    if (!cvText || cvText.trim().length === 0) {
+    // Check if file exists
+    if (!file) {
       errors.push({
-        field: "cvText",
-        message: "CV text is required",
+        field: "cvFile",
+        message: "CV file is required",
       });
-    } else if (cvText.trim().length < 50) {
+      return { isValid: false, errors };
+    }
+
+    // Check file size
+    if (file.size > FILE_UPLOAD_CONFIG.MAX_CV_FILE_SIZE) {
       errors.push({
-        field: "cvText",
-        message: "CV text must be at least 50 characters long",
+        field: "cvFile",
+        message: `File size (${(file.size / (1024 * 1024)).toFixed(2)}MB) exceeds maximum allowed size (${
+          FILE_UPLOAD_CONFIG.MAX_CV_FILE_SIZE / (1024 * 1024)
+        }MB)`,
       });
-    } else if (cvText.length > 10000) {
+    }
+
+    // Check MIME type
+    const isValidMimeType = FILE_UPLOAD_CONFIG.ALLOWED_CV_MIME_TYPES.some(
+      (type) => type === file.mimetype
+    );
+    if (!isValidMimeType) {
       errors.push({
-        field: "cvText",
-        message: "CV text must not exceed 10,000 characters",
+        field: "cvFile",
+        message: `Invalid file type (${file.mimetype}). Allowed types: ${FILE_UPLOAD_CONFIG.ALLOWED_CV_MIME_TYPES.join(
+          ", "
+        )}`,
+      });
+    }
+
+    // Check file extension
+    const extension = path.extname(file.originalname).toLowerCase();
+    const isValidExtension = FILE_UPLOAD_CONFIG.ALLOWED_CV_EXTENSIONS.some(
+      (ext) => ext === extension
+    );
+    if (!isValidExtension) {
+      errors.push({
+        field: "cvFile",
+        message: `Invalid file extension (${extension}). Allowed extensions: ${FILE_UPLOAD_CONFIG.ALLOWED_CV_EXTENSIONS.join(
+          ", "
+        )}`,
+      });
+    }
+
+    // Check if filename is reasonable (not empty, not too long)
+    if (!file.originalname || file.originalname.trim().length === 0) {
+      errors.push({
+        field: "cvFile",
+        message: "File must have a valid filename",
+      });
+    } else if (file.originalname.length > 255) {
+      errors.push({
+        field: "cvFile",
+        message: "Filename is too long (maximum 255 characters)",
       });
     }
 
@@ -70,12 +115,12 @@ export class ApplicationValidator {
   validateApplication(data: {
     userId: number;
     jobRoleId: number;
-    cvText: string;
+    cvFile: Express.Multer.File;
   }): ValidationResult {
     const jobRoleIdValidation = this.validateJobRoleId(data.jobRoleId);
-    const cvTextValidation = this.validateCvText(data.cvText);
+    const cvFileValidation = this.validateCvFile(data.cvFile);
 
-    const allErrors = [...jobRoleIdValidation.errors, ...cvTextValidation.errors];
+    const allErrors = [...jobRoleIdValidation.errors, ...cvFileValidation.errors];
 
     return {
       isValid: allErrors.length === 0,

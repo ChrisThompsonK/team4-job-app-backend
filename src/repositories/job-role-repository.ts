@@ -4,19 +4,14 @@ import type { JobRole, NewJobRole } from "../db/schema.js";
 import { applications, jobRoles } from "../db/schema.js";
 
 export class JobRoleRepository {
-  /**
-   * Helper method to apply search filter if search term is provided
-   */
-  private applySearchFilter(query: any, search?: string): any {
-    if (search && search.trim()) {
-      return query.where(like(jobRoles.name, `%${search}%`));
-    }
-    return query;
-  }
-
   async findAll(limit?: number, offset?: number, search?: string) {
     let query = db.select().from(jobRoles);
-    query = this.applySearchFilter(query, search);
+
+    // Apply search filter if search term is provided
+    if (search?.trim()) {
+      query = query.where(like(jobRoles.name, `%${search}%`)) as typeof query;
+    }
+
     query = query.orderBy(jobRoles.id) as typeof query;
 
     if (limit !== undefined && offset !== undefined) {
@@ -59,7 +54,12 @@ export class JobRoleRepository {
 
   async count(search?: string) {
     let query = db.select({ count: sql<number>`count(*)` }).from(jobRoles);
-    query = this.applySearchFilter(query, search);
+
+    // Apply search filter if search term is provided
+    if (search?.trim()) {
+      query = query.where(like(jobRoles.name, `%${search}%`)) as typeof query;
+    }
+
     const result = await query;
     return result[0]?.count || 0;
   }

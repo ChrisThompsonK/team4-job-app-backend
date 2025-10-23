@@ -203,11 +203,25 @@ fetch('/api/applications', {
 - `GET /api/jobs/status/closed` - Get all closed job roles
 
 ### Applications API
-- `POST /api/applications` - Submit job application (requires authentication)
+- `POST /api/applications` - Submit job application with CV file upload (multipart/form-data)
 - `GET /api/applications/:id` - Get application by ID (requires authentication)
 - `GET /api/applications/job/:jobId` - Get all applications for a job (requires authentication)
 - `PUT /api/applications/:id/hire` - Hire applicant (requires admin role)
 - `PUT /api/applications/:id/reject` - Reject applicant (requires admin role)
+
+### File Upload API
+- `GET /api/files/cv/:applicationId` - Serve CV file for viewing
+- `GET /api/files/cv/:applicationId/download` - Download CV file with proper headers
+- `GET /api/files/cv/:applicationId/info` - Get CV file metadata (size, type, etc.)
+
+### Admin File Management API
+- `GET /api/admin/file-stats` - Get file system statistics and health metrics
+- `GET /api/admin/validate-all-files` - Validate integrity of all files in system
+- `GET /api/admin/verify-file/:applicationId` - Verify specific file integrity
+- `POST /api/admin/cleanup-files` - Clean up old files (dry run by default)
+- `POST /api/admin/cleanup-orphaned-files` - Clean up files not referenced in database
+
+> **Note**: Admin endpoints are currently unprotected and should be secured with admin authentication in production.
 
 ### Job Role Data Structure
 ```typescript
@@ -222,6 +236,57 @@ interface JobRole {
   keyResponsibilities: string;
   status: "open" | "closed";
   numberOfOpenPositions: number;
+}
+```
+
+### File Upload Requirements
+
+The application system now supports **CV file uploads** instead of text-based CVs:
+
+#### Supported File Types
+- **Word Documents**: `.doc`, `.docx`
+- **Images**: `.png`
+
+#### File Constraints
+- **Maximum file size**: 10MB
+- **Storage location**: `uploads/cvs/YYYY/MM/` (organized by year/month)
+- **Naming convention**: `timestamp-originalname.ext`
+
+#### Submitting Applications with File Upload
+
+Applications must be submitted using `multipart/form-data` with the following fields:
+
+```javascript
+const formData = new FormData();
+formData.append('userId', '1');
+formData.append('jobRoleId', '1');
+formData.append('cvFile', fileInput.files[0]); // File input
+
+fetch('/api/applications', {
+  method: 'POST',
+  body: formData,
+  headers: {
+    'Authorization': `Bearer ${token}` // If authentication is enabled
+  }
+});
+```
+
+#### Application Data Structure (Updated)
+```typescript
+interface Application {
+  id: number;
+  userId: number;
+  jobRoleId: number;
+  cvFileName: string;      // Original filename
+  cvFilePath: string;      // Server storage path
+  cvFileType: string;      // MIME type
+  cvFileSize: number;      // File size in bytes
+  status: "pending" | "hired" | "rejected";
+  createdAt: Date;
+  updatedAt: Date;
+  // Additional fields from user join
+  applicantName: string;
+  email: string;
 }
 ```
 
@@ -262,7 +327,8 @@ npm run db:seed
 This populates the database with sample job roles. The application will create the database tables automatically, but it starts with no data.
 
 ### Database Schema
-The main entity is the `job_roles` table with the following structure:
+
+#### Job Roles Table (`job_roles`)
 - `id` - Auto-incrementing primary key
 - `name` - Job role title
 - `location` - Job location
@@ -274,11 +340,59 @@ The main entity is the `job_roles` table with the following structure:
 - `status` - Job status (open/closed)
 - `number_of_open_positions` - Available positions
 
+#### Applications Table (`applications`)
+- `id` - Auto-incrementing primary key
+- `user_id` - Foreign key to users table
+- `job_role_id` - Foreign key to job_roles table
+- `cv_file_name` - Original uploaded filename
+- `cv_file_path` - Server storage path
+- `cv_file_type` - MIME type of uploaded file
+- `cv_file_size` - File size in bytes
+- `status` - Application status (pending/hired/rejected)
+- `created_at` - Application submission timestamp
+- `updated_at` - Last modification timestamp
+
+#### Users Table (`users`)
+- `id` - Auto-incrementing primary key
+- `email` - User email address (unique)
+- `first_name` - User's first name
+- `last_name` - User's last name
+- `password_hash` - Hashed password
+- `role` - User role (user/admin)
+- `created_at` - Account creation timestamp
+
 ### Database Management
 - **View Database**: `npm run db:studio` - Opens Drizzle Studio web interface
 - **Generate Migrations**: `npm run db:generate` - Creates migration files
 - **Apply Schema**: `npm run db:push` - Applies schema to database
 - **Seed Data**: `npm run db:seed` - Populates with sample job roles
+
+### File Storage
+
+CV files are stored in the local filesystem with the following organization:
+
+```
+uploads/
+└── cvs/
+    ├── 2024/
+    │   ├── 01/
+    │   │   ├── 1640995200000-john-doe-cv.pdf
+    │   │   └── 1640995300000-jane-smith-resume.docx
+    │   └── 02/
+    └── 2025/
+        └── 10/
+            └── 1729756800000-developer-cv.png
+```
+
+#### File Naming Convention
+Files are renamed using the pattern: `{timestamp}-{sanitized-original-name}.{extension}`
+
+#### File Management Features
+- **Automatic cleanup** of orphaned files (files not referenced in database)
+- **File integrity validation** to ensure files exist and match database records
+- **File serving** with proper MIME type headers
+- **Download endpoints** with content-disposition headers
+- **File metadata** endpoints for frontend integration
 
 ## Project Structure
 
@@ -291,17 +405,46 @@ team4-job-app-backend/
 │   ├── linting-instructions.md      # Code quality & AI workflow
 │   └── dependencies-instructions.md # Package management
 ├── src/
+│   ├── config/             # Configuration files
+│   │   └── file-upload.ts  # File upload configuration
+│   ├── controllers/        # Request handlers
+│   │   ├── application-controller.ts
+│   │   ├── auth-controller.ts
+│   │   └── job-role-controller.ts
 │   ├── db/
 │   │   ├── index.ts        # Database connection
 │   │   ├── schema.ts       # Database schema definition
 │   │   └── seed.ts         # Sample data seeding
-│   ├── routes/
+│   ├── lib/                # Utility libraries
+│   │   ├── auth.ts         # Authentication utilities
+│   │   └── file-manager.ts # File system operations
+│   ├── middleware/         # Express middleware
+│   │   ├── auth.ts         # Authentication middleware
+│   │   └── file-upload.ts  # File upload middleware
+│   ├── repositories/       # Data access layer
+│   │   ├── application-repository.ts
+│   │   ├── job-role-repository.ts
+│   │   └── user-repository.ts
+│   ├── routes/             # API route handlers
+│   │   ├── admin.ts        # Admin/file management endpoints
+│   │   ├── applications.ts # Application endpoints
+│   │   ├── auth.ts         # Authentication endpoints
+│   │   ├── files.ts        # File serving endpoints
 │   │   └── jobs.ts         # Job roles API endpoints
+│   ├── services/           # Business logic layer
+│   │   ├── application-service.ts
+│   │   └── job-role-service.ts
+│   ├── validators/         # Input validation
+│   │   ├── application-validator.ts
+│   │   └── job-role-validator.ts
 │   └── index.ts            # Main application entry point
+├── uploads/                # File storage directory
+│   └── cvs/               # CV file storage (organized by year/month)
 ├── data/
 │   └── database.sqlite     # SQLite database file
 ├── drizzle/                # Database migrations
 ├── dist/                   # Compiled JavaScript output
+├── test-file-upload.js     # File upload testing script
 ├── drizzle.config.ts       # Drizzle ORM configuration
 ├── package.json            # Project dependencies and scripts
 ├── tsconfig.json           # TypeScript configuration
