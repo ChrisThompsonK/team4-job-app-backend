@@ -68,7 +68,7 @@ export class JobRoleController {
   getAllJobRoles = async (req: Request, res: Response): Promise<void> => {
     try {
       // Parse query parameters for pagination and search
-      const { limit, offset, search } = req.query;
+      const { limit, offset, search, location, capability, band } = req.query;
       const paginationResult = parsePaginationParams(limit, offset);
 
       if (!paginationResult.isValid) {
@@ -81,7 +81,19 @@ export class JobRoleController {
       const { limit: parsedLimit, offset: parsedOffset } = paginationResult.params || {};
       const searchQuery = typeof search === "string" ? search : undefined;
 
-      const result = await this.service.getAllJobRoles(parsedLimit, parsedOffset, searchQuery);
+      // Extract filter parameters
+      const filters: { location?: string; capability?: string; band?: string } = {};
+      if (typeof location === "string" && location.trim()) {
+        filters.location = location.trim();
+      }
+      if (typeof capability === "string" && capability.trim()) {
+        filters.capability = capability.trim();
+      }
+      if (typeof band === "string" && band.trim()) {
+        filters.band = band.trim();
+      }
+
+      const result = await this.service.getAllJobRoles(parsedLimit, parsedOffset, searchQuery, filters);
 
       res.json({
         success: true,
@@ -93,6 +105,7 @@ export class JobRoleController {
           offset: parsedOffset,
         },
         search: searchQuery,
+        filters: filters,
       });
     } catch (error) {
       handleError(error, res, "Failed to fetch job roles");
