@@ -18,11 +18,12 @@ export const FILE_UPLOAD_CONFIG = {
   })(),
 
   // Allowed MIME types for CV files (from environment)
-  ALLOWED_CV_MIME_TYPES: (process.env.ALLOWED_CV_MIME_TYPES as string).split(","),
+  ALLOWED_CV_MIME_TYPES: (process.env.ALLOWED_CV_MIME_TYPES ?? "").split(",").filter(Boolean),
 
   // Allowed file extensions (from environment)
-  ALLOWED_CV_EXTENSIONS: (process.env.ALLOWED_CV_EXTENSIONS as string)
+  ALLOWED_CV_EXTENSIONS: (process.env.ALLOWED_CV_EXTENSIONS ?? "")
     .split(",")
+    .filter(Boolean)
     .map((ext) => (ext.startsWith(".") ? ext : `.${ext}`)),
 
   // File naming strategy
