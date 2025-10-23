@@ -47,19 +47,6 @@ describe("ApplicationValidator", () => {
       expect(result.errors).toHaveLength(0);
     });
 
-    it("should return valid when file is properly provided with .png extension", () => {
-      const validFile = createMockFile({
-        originalname: "cv-image.png",
-        mimetype: "image/png",
-        size: 3 * 1024 * 1024, // 3MB
-      });
-
-      const result = validator.validateCvFile(validFile);
-
-      expect(result.isValid).toBe(true);
-      expect(result.errors).toHaveLength(0);
-    });
-
     it("should return invalid when file is missing", () => {
       // biome-ignore lint/suspicious/noExplicitAny: Testing null case requires any
       const result = validator.validateCvFile(null as any);

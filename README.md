@@ -245,7 +245,6 @@ The application system now supports **CV file uploads** instead of text-based CV
 
 #### Supported File Types
 - **Word Documents**: `.doc`, `.docx`
-- **Images**: `.png`
 
 #### File Constraints
 - **Maximum file size**: 10MB
@@ -381,7 +380,7 @@ uploads/
     │   └── 02/
     └── 2025/
         └── 10/
-            └── 1729756800000-developer-cv.png
+            └── 1729756800000-developer-cv.docx
 ```
 
 #### File Naming Convention

@@ -2,25 +2,22 @@ import path from "node:path";
 
 // File upload configuration constants
 export const FILE_UPLOAD_CONFIG = {
-  // Upload directories (configurable via environment)
-  CV_UPLOAD_DIR: process.env.CV_UPLOAD_DIR || "./uploads/cvs",
+  // Upload directories (from environment)
+  CV_UPLOAD_DIR: process.env.CV_UPLOAD_DIR as string,
 
-  // File size limits (configurable via environment, default 10MB)
-  MAX_CV_FILE_SIZE: Number(process.env.MAX_CV_FILE_SIZE) || 10 * 1024 * 1024, // 10MB in bytes
+  // File size limits (from environment)
+  MAX_CV_FILE_SIZE: Number(process.env.MAX_CV_FILE_SIZE),
 
   // Allowed MIME types for CV files
   ALLOWED_CV_MIME_TYPES: [
     "application/vnd.openxmlformats-officedocument.wordprocessingml.document", // .docx
     "application/msword", // .doc
-    "image/png", // .png
   ] as const,
 
-  // Allowed file extensions (configurable via environment)
-  ALLOWED_CV_EXTENSIONS: process.env.ALLOWED_CV_EXTENSIONS
-    ? process.env.ALLOWED_CV_EXTENSIONS.split(",").map((ext) =>
-        ext.startsWith(".") ? ext : `.${ext}`
-      )
-    : ([".doc", ".docx", ".png"] as const),
+  // Allowed file extensions (from environment)
+  ALLOWED_CV_EXTENSIONS: (process.env.ALLOWED_CV_EXTENSIONS as string)
+    .split(",")
+    .map((ext) => (ext.startsWith(".") ? ext : `.${ext}`)),
 
   // File naming strategy
   generateFileName: (originalName: string): string => {

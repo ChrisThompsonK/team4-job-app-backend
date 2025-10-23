@@ -9,6 +9,13 @@ export default defineConfig({
     // Environment settings
     environment: "node",
 
+    // Set up environment variables for tests
+    env: {
+      CV_UPLOAD_DIR: "./uploads/cvs",
+      MAX_CV_FILE_SIZE: "10485760",
+      ALLOWED_CV_EXTENSIONS: "doc,docx",
+    },
+
     // Global test settings
     globals: false,
 
