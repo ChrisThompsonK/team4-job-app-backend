@@ -245,6 +245,7 @@ The application system now supports **CV file uploads** instead of text-based CV
 
 #### Supported File Types
 - **Word Documents**: `.doc`, `.docx`
+- **PDF Documents**: `.pdf`
 
 #### File Constraints
 - **Maximum file size**: 10MB

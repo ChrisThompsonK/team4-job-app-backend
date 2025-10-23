@@ -47,6 +47,19 @@ describe("ApplicationValidator", () => {
       expect(result.errors).toHaveLength(0);
     });
 
+    it("should return valid when file is properly provided with .pdf extension", () => {
+      const validFile = createMockFile({
+        originalname: "resume.pdf",
+        mimetype: "application/pdf",
+        size: 2 * 1024 * 1024, // 2MB
+      });
+
+      const result = validator.validateCvFile(validFile);
+
+      expect(result.isValid).toBe(true);
+      expect(result.errors).toHaveLength(0);
+    });
+
     it("should return invalid when file is missing", () => {
       // biome-ignore lint/suspicious/noExplicitAny: Testing null case requires any
       const result = validator.validateCvFile(null as any);
@@ -75,8 +88,8 @@ describe("ApplicationValidator", () => {
 
     it("should return invalid when MIME type is not allowed", () => {
       const invalidFile = createMockFile({
-        originalname: "document.pdf",
-        mimetype: "application/pdf",
+        originalname: "document.txt",
+        mimetype: "text/plain",
       });
 
       const result = validator.validateCvFile(invalidFile);
@@ -229,8 +242,8 @@ describe("ApplicationValidator", () => {
         userId: 1,
         jobRoleId: 1,
         cvFile: createMockFile({
-          originalname: "document.pdf",
-          mimetype: "application/pdf", // Invalid MIME type
+          originalname: "document.txt",
+          mimetype: "text/plain", // Invalid MIME type
         }),
       };
 

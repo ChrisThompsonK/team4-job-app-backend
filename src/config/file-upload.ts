@@ -12,6 +12,7 @@ export const FILE_UPLOAD_CONFIG = {
   ALLOWED_CV_MIME_TYPES: [
     "application/vnd.openxmlformats-officedocument.wordprocessingml.document", // .docx
     "application/msword", // .doc
+    "application/pdf", // .pdf
   ] as const,
 
   // Allowed file extensions (from environment)
