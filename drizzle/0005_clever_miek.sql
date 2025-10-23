@@ -9,7 +9,7 @@ CREATE TABLE `__new_applications` (
 	`cv_file_size` integer NOT NULL,
 	`status` text DEFAULT 'in progress' NOT NULL,
 	`created_at` text NOT NULL,
-	FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON UPDATE no action ON DELETE cascade,
+	FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON UPDATE no action ON DELETE no action,
 	FOREIGN KEY (`job_role_id`) REFERENCES `job_roles`(`id`) ON UPDATE no action ON DELETE no action
 );
 --> statement-breakpoint
