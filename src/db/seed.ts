@@ -1,6 +1,6 @@
 import bcrypt from "bcryptjs";
 import { db } from "./index.js";
-import { type JobRoleStatus, applications, jobRoles, users } from "./schema.js";
+import { applications, type JobRoleStatus, jobRoles, users } from "./schema.js";
 
 const sampleJobs = [
   {
