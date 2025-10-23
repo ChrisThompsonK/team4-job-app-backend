@@ -63,7 +63,7 @@ export class ApplicationService {
 
     // The file has already been saved by multer middleware
     // Use the path where multer stored the file
-    const actualStoragePath = file.path; // Create the application with file metadata
+    const actualStoragePath = file.path;
     const newApplication: NewApplication = {
       userId: input.userId,
       jobRoleId: input.jobRoleId,
