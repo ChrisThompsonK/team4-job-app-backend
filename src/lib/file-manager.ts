@@ -68,7 +68,8 @@ export async function getFileInfo(filePath: string): Promise<{
 /**
  * Recursively clean up old files
  */
-async function recursiveCleanup(dirPath: string, cutoffDate: Date): Promise<void> {
+async function recursiveCleanup(dirPath: string, cutoffDate: Date): Promise<number> {
+  let count = 0;
   try {
     const entries = await fs.readdir(dirPath, { withFileTypes: true });
 
@@ -76,31 +77,34 @@ async function recursiveCleanup(dirPath: string, cutoffDate: Date): Promise<void
       const fullPath = path.join(dirPath, entry.name);
 
       if (entry.isDirectory()) {
-        await recursiveCleanup(fullPath, cutoffDate);
+        count += await recursiveCleanup(fullPath, cutoffDate);
       } else if (entry.isFile()) {
         const stats = await fs.stat(fullPath);
         if (stats.mtime < cutoffDate) {
           await deleteFile(fullPath);
+          count++;
         }
       }
     }
   } catch (error) {
     console.error(`Error cleaning directory ${dirPath}:`, error);
   }
+  return count;
 }
 
 /**
  * Clean up old files (for maintenance)
  */
-export async function cleanupOldFiles(daysOld: number = 30): Promise<void> {
+export async function cleanupOldFiles(daysOld: number = 30): Promise<number> {
   const cutoffDate = new Date();
   cutoffDate.setDate(cutoffDate.getDate() - daysOld);
 
   try {
     const baseDir = FILE_UPLOAD_CONFIG.CV_UPLOAD_DIR;
-    await recursiveCleanup(baseDir, cutoffDate);
+    return await recursiveCleanup(baseDir, cutoffDate);
   } catch (error) {
     console.error("Error during file cleanup:", error);
+    return 0;
   }
 }
 
