@@ -14,7 +14,10 @@ CREATE TABLE `__new_applications` (
 );
 --> statement-breakpoint
 INSERT INTO `__new_applications`("id", "user_id", "job_role_id", "status", "created_at", "cv_file_name", "cv_file_path", "cv_file_type", "cv_file_size") 
-SELECT "id", "user_id", "job_role_id", "status", "created_at", 'legacy-cv.txt', '', 'text/plain', 0 FROM `applications`;--> statement-breakpoint
+SELECT a."id", a."user_id", a."job_role_id", a."status", a."created_at", 'legacy-cv.txt', '', 'text/plain', 0 
+FROM `applications` a
+WHERE EXISTS (SELECT 1 FROM `users` u WHERE u.id = a.user_id)
+AND EXISTS (SELECT 1 FROM `job_roles` j WHERE j.id = a.job_role_id);--> statement-breakpoint
 DROP TABLE `applications`;--> statement-breakpoint
 ALTER TABLE `__new_applications` RENAME TO `applications`;--> statement-breakpoint
 PRAGMA foreign_keys=ON;
