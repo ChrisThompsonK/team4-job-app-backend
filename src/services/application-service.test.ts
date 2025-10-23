@@ -62,10 +62,23 @@ describe("ApplicationService", () => {
   });
 
   describe("createApplication", () => {
+    // Mock file object for testing
+    const mockCvFile = {
+      fieldname: "cvFile",
+      originalname: "test-cv.docx",
+      encoding: "7bit",
+      mimetype: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      path: "/test/uploads/cvs/2025/10/1729756800000-test-cv.docx",
+      destination: "/test/uploads/cvs/2025/10/",
+      filename: "1729756800000-test-cv.docx",
+      size: 50000,
+      buffer: Buffer.from("mock file content"),
+    } as Express.Multer.File;
+
     const validInput = {
       userId: 1,
       jobRoleId: 1,
-      cvText: "This is my CV text with more than 50 characters to pass validation requirements.",
+      cvFile: mockCvFile,
     };
 
     const mockOpenJobRole: JobRole = {
@@ -94,7 +107,10 @@ describe("ApplicationService", () => {
         id: 1,
         userId: 1,
         jobRoleId: 1,
-        cvText: validInput.cvText,
+        cvFileName: validInput.cvFile.originalname,
+        cvFilePath: validInput.cvFile.path,
+        cvFileType: validInput.cvFile.mimetype,
+        cvFileSize: validInput.cvFile.size,
         status: "in progress",
         createdAt: new Date().toISOString(),
       };
@@ -109,7 +125,10 @@ describe("ApplicationService", () => {
       expect(mockApplicationRepository.create).toHaveBeenCalledWith({
         userId: 1,
         jobRoleId: 1,
-        cvText: validInput.cvText,
+        cvFileName: validInput.cvFile.originalname,
+        cvFilePath: validInput.cvFile.path,
+        cvFileType: validInput.cvFile.mimetype,
+        cvFileSize: validInput.cvFile.size,
         status: "in progress",
         createdAt: expect.any(String),
       });
@@ -216,42 +235,6 @@ describe("ApplicationService", () => {
       await expect(service.createApplication(validInput)).rejects.toThrow(
         "Failed to create application"
       );
-    });
-
-    it("should trim CV text before creating application", async () => {
-      mockValidator.validateApplication.mockReturnValue({
-        isValid: true,
-        errors: [],
-      });
-
-      mockApplicationRepository.findByUserIdAndJobRoleId.mockResolvedValue(null);
-      mockJobRoleRepository.findById.mockResolvedValue(mockOpenJobRole);
-
-      const mockCreatedApplication = {
-        id: 1,
-        userId: 1,
-        jobRoleId: 1,
-        cvText: validInput.cvText,
-        status: "in progress",
-        createdAt: new Date().toISOString(),
-      };
-
-      mockApplicationRepository.create.mockResolvedValue(mockCreatedApplication);
-
-      const inputWithWhitespace = {
-        ...validInput,
-        cvText: `  ${validInput.cvText}  `,
-      };
-
-      await service.createApplication(inputWithWhitespace);
-
-      expect(mockApplicationRepository.create).toHaveBeenCalledWith({
-        userId: 1,
-        jobRoleId: 1,
-        cvText: validInput.cvText,
-        status: "in progress",
-        createdAt: expect.any(String),
-      });
     });
   });
 

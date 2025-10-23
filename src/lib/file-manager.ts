@@ -1,0 +1,149 @@
+import { existsSync } from "node:fs";
+import fs from "node:fs/promises";
+import path from "node:path";
+import mimeTypes from "mime-types";
+import { FILE_UPLOAD_CONFIG } from "../config/file-upload.js";
+
+/**
+ * Get MIME type from file extension using mime-types package
+ * Returns null if MIME type cannot be determined, allowing caller to handle gracefully
+ */
+export function getMimeTypeFromExtension(fileName: string): string | null {
+  const mimeType = mimeTypes.lookup(fileName);
+  if (!mimeType) {
+    console.warn(`Unable to determine MIME type for file: ${fileName}`);
+    return null;
+  }
+  return mimeType;
+}
+
+/**
+ * Delete a file from the file system
+ */
+export async function deleteFile(filePath: string): Promise<void> {
+  try {
+    await fs.unlink(filePath);
+    console.log(`File deleted: ${filePath}`);
+  } catch (error: unknown) {
+    // If file doesn't exist, that's fine - it's already "deleted"
+    const err = error as NodeJS.ErrnoException;
+    if (err instanceof Error && err.code !== "ENOENT") {
+      console.error(`Error deleting file ${filePath}:`, err);
+      throw err;
+    }
+  }
+}
+
+/**
+ * Check if a file exists
+ */
+export function fileExists(filePath: string): boolean {
+  return existsSync(filePath);
+}
+
+/**
+ * Get file information
+ */
+export async function getFileInfo(filePath: string): Promise<{
+  size: number;
+  mimeType: string;
+  exists: boolean;
+}> {
+  try {
+    const stats = await fs.stat(filePath);
+    const mimeType = getMimeTypeFromExtension(filePath);
+
+    return {
+      size: stats.size,
+      mimeType: mimeType || "application/octet-stream", // Fallback for unknown types
+      exists: true,
+    };
+  } catch {
+    return {
+      size: 0,
+      mimeType: "application/octet-stream",
+      exists: false,
+    };
+  }
+}
+
+/**
+ * Recursively clean up old files
+ */
+async function recursiveCleanup(dirPath: string, cutoffDate: Date): Promise<number> {
+  let count = 0;
+  try {
+    const entries = await fs.readdir(dirPath, { withFileTypes: true });
+
+    for (const entry of entries) {
+      const fullPath = path.join(dirPath, entry.name);
+
+      if (entry.isDirectory()) {
+        count += await recursiveCleanup(fullPath, cutoffDate);
+      } else if (entry.isFile()) {
+        const stats = await fs.stat(fullPath);
+        if (stats.mtime < cutoffDate) {
+          await deleteFile(fullPath);
+          count++;
+        }
+      }
+    }
+  } catch (error) {
+    console.error(`Error cleaning directory ${dirPath}:`, error);
+  }
+  return count;
+}
+
+/**
+ * Clean up old files (for maintenance)
+ */
+export async function cleanupOldFiles(daysOld: number = 30): Promise<number> {
+  const cutoffDate = new Date();
+  cutoffDate.setDate(cutoffDate.getDate() - daysOld);
+
+  try {
+    const baseDir = FILE_UPLOAD_CONFIG.CV_UPLOAD_DIR;
+    return await recursiveCleanup(baseDir, cutoffDate);
+  } catch (error) {
+    console.error("Error during file cleanup:", error);
+    return 0;
+  }
+}
+
+/**
+ * Validate uploaded file
+ */
+export function validateUploadedFile(file: Express.Multer.File): {
+  isValid: boolean;
+  error?: string;
+} {
+  try {
+    // Check file size
+    if (file.size > FILE_UPLOAD_CONFIG.MAX_CV_FILE_SIZE) {
+      return {
+        isValid: false,
+        error: `File size exceeds ${FILE_UPLOAD_CONFIG.MAX_CV_FILE_SIZE / (1024 * 1024)}MB limit`,
+      };
+    }
+
+    // Check file type
+    if (
+      !FILE_UPLOAD_CONFIG.ALLOWED_CV_MIME_TYPES.includes(
+        file.mimetype as (typeof FILE_UPLOAD_CONFIG.ALLOWED_CV_MIME_TYPES)[number]
+      )
+    ) {
+      return {
+        isValid: false,
+        error: `File type ${file.mimetype} is not allowed`,
+      };
+    }
+
+    return { isValid: true };
+  } catch (error) {
+    console.error("Error validating file:", error);
+    return {
+      isValid: false,
+      error: "File validation failed",
+    };
+  }
+}

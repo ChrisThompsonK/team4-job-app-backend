@@ -126,7 +126,10 @@ export const applications = sqliteTable("applications", {
   jobRoleId: integer("job_role_id")
     .notNull()
     .references(() => jobRoles.id),
-  cvText: text("cv_text").notNull(),
+  cvFileName: text("cv_file_name").notNull(), // original filename
+  cvFilePath: text("cv_file_path").notNull(), // server storage path
+  cvFileType: text("cv_file_type").notNull(), // MIME type
+  cvFileSize: integer("cv_file_size").notNull(), // file size in bytes
   status: text("status").notNull().default("in progress").$type<ApplicationStatus>(), // "in progress" | "hired" | "rejected"
   createdAt: text("created_at").notNull(), // stored as ISO string
 });
