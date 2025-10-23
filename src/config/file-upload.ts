@@ -11,7 +11,11 @@ export const FILE_UPLOAD_CONFIG = {
   })(),
 
   // File size limits (from environment)
-  MAX_CV_FILE_SIZE: Number(process.env.MAX_CV_FILE_SIZE),
+  MAX_CV_FILE_SIZE: (() => {
+    const value = Number(process.env.MAX_CV_FILE_SIZE);
+    // Default to 5MB if not set or invalid
+    return Number.isFinite(value) && value > 0 ? value : 5 * 1024 * 1024;
+  })(),
 
   // Allowed MIME types for CV files (from environment)
   ALLOWED_CV_MIME_TYPES: (process.env.ALLOWED_CV_MIME_TYPES as string).split(","),
