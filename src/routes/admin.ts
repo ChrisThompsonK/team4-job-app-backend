@@ -1,6 +1,6 @@
 import type { Request, Response } from "express";
 import express from "express";
-import { cleanupOldFiles, fileExists } from "../lib/file-manager.js";
+import { cleanupOldFiles, fileExists, getMimeTypeFromExtension } from "../lib/file-manager.js";
 import { ApplicationRepository } from "../repositories/application-repository.js";
 
 const router = express.Router();
@@ -265,21 +265,7 @@ router.get("/verify-file/:applicationId", async (req: Request, res: Response): P
         accessible = true;
 
         // Determine MIME type from extension
-        const extension = application.cvFileName.split(".").pop()?.toLowerCase();
-        switch (extension) {
-          case "doc":
-            actualMimeType = "application/msword";
-            break;
-          case "docx":
-            actualMimeType =
-              "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
-            break;
-          case "png":
-            actualMimeType = "image/png";
-            break;
-          default:
-            actualMimeType = "application/octet-stream";
-        }
+        actualMimeType = getMimeTypeFromExtension(application.cvFileName);
       } catch (error) {
         console.error(`Error accessing file ${application.cvFilePath}:`, error);
       }

@@ -3,6 +3,24 @@ import path from "node:path";
 import { FILE_UPLOAD_CONFIG } from "../config/file-upload.js";
 
 /**
+ * Get MIME type from file extension
+ */
+export function getMimeTypeFromExtension(fileName: string): string {
+  const extension = path.extname(fileName).toLowerCase();
+
+  switch (extension) {
+    case ".doc":
+      return "application/msword";
+    case ".docx":
+      return "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+    case ".png":
+      return "image/png";
+    default:
+      return "application/octet-stream";
+  }
+}
+
+/**
  * Delete a file from the file system
  */
 export async function deleteFile(filePath: string): Promise<void> {
@@ -40,21 +58,7 @@ export async function getFileInfo(filePath: string): Promise<{
 }> {
   try {
     const stats = await fs.stat(filePath);
-    const extension = path.extname(filePath);
-
-    // Determine MIME type based on extension
-    let mimeType = "application/octet-stream";
-    switch (extension.toLowerCase()) {
-      case ".doc":
-        mimeType = "application/msword";
-        break;
-      case ".docx":
-        mimeType = "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
-        break;
-      case ".png":
-        mimeType = "image/png";
-        break;
-    }
+    const mimeType = getMimeTypeFromExtension(filePath);
 
     return {
       size: stats.size,
