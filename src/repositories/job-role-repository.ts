@@ -52,10 +52,7 @@ export class JobRoleRepository {
     return result[0] || null;
   }
 
-  async count(
-    search?: string,
-    filters?: { location?: string; capability?: string; band?: string }
-  ) {
+  async count(search?: string) {
     let query = db.select({ count: sql<number>`count(*)` }).from(jobRoles);
 
     // Apply search filter if search term is provided

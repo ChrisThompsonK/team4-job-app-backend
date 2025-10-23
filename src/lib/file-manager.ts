@@ -1,3 +1,4 @@
+import { existsSync } from "node:fs";
 import fs from "node:fs/promises";
 import path from "node:path";
 import mimeTypes from "mime-types";
@@ -30,18 +31,14 @@ export async function deleteFile(filePath: string): Promise<void> {
       console.error(`Error deleting file ${filePath}:`, err);
       throw err;
     }
+  }
 }
 
 /**
  * Check if a file exists
  */
-export async function fileExists(filePath: string): Promise<boolean> {
-  try {
-    await fs.access(filePath);
-    return true;
-  } catch {
-    return false;
-  }
+export function fileExists(filePath: string): boolean {
+  return existsSync(filePath);
 }
 
 /**

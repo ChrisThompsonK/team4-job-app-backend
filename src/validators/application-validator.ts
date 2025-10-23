@@ -49,8 +49,8 @@ export class ApplicationValidator {
 
     // Check file extension
     const extension = path.extname(file.originalname).toLowerCase();
-    const normalizedAllowedExtensions = FILE_UPLOAD_CONFIG.ALLOWED_CV_EXTENSIONS.map(
-      (ext) => ext.startsWith('.') ? ext.toLowerCase() : `.${ext.toLowerCase()}`
+    const normalizedAllowedExtensions = FILE_UPLOAD_CONFIG.ALLOWED_CV_EXTENSIONS.map((ext) =>
+      ext.startsWith(".") ? ext.toLowerCase() : `.${ext.toLowerCase()}`
     );
     const isValidExtension = normalizedAllowedExtensions.includes(extension);
     if (!isValidExtension) {

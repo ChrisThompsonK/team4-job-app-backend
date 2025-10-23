@@ -1,7 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
 import type { NextFunction, Request, Response } from "express";
-import mimeTypes from "mime-types";
 import multer from "multer";
 import { FILE_UPLOAD_CONFIG } from "../config/file-upload.js";
 
