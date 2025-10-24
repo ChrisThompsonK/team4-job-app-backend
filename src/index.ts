@@ -24,6 +24,9 @@ app.use((_req, res, next) => {
   next();
 });
 
+// Serve uploaded files statically
+app.use("/uploads", express.static("uploads"));
+
 // Better Auth API routes (for direct Better Auth access)
 app.use("/api/better-auth", auth.handler);
 
