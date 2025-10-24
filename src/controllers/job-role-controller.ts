@@ -93,7 +93,12 @@ export class JobRoleController {
         filters.band = band.trim();
       }
 
-      const result = await this.service.getAllJobRoles(parsedLimit, parsedOffset, searchQuery, filters);
+      const result = await this.service.getAllJobRoles(
+        parsedLimit,
+        parsedOffset,
+        searchQuery,
+        filters
+      );
 
       res.json({
         success: true,

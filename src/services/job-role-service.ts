@@ -53,8 +53,8 @@ export class JobRoleService {
   }
 
   async getAllJobRoles(
-    limit?: number, 
-    offset?: number, 
+    limit?: number,
+    offset?: number,
     search?: string,
     filters?: { location?: string; capability?: string; band?: string }
   ) {
