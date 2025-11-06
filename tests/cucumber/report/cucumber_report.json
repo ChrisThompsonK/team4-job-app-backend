@@ -1,0 +1,139 @@
+[
+  {
+    "description": "",
+    "elements": [
+      {
+        "description": "",
+        "id": "user-authentication;user-registers-and-logs-in-successfully",
+        "keyword": "Scenario",
+        "line": 3,
+        "name": "User registers and logs in successfully",
+        "steps": [
+          {
+            "arguments": [],
+            "keyword": "Given ",
+            "line": 4,
+            "name": "a unique user registration payload for auth",
+            "match": {
+              "location": "tests/cucumber/auth.steps.cjs:8"
+            },
+            "result": {
+              "status": "passed",
+              "duration": 509042
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "When ",
+            "line": 5,
+            "name": "the user registers via the auth API",
+            "match": {
+              "location": "tests/cucumber/auth.steps.cjs:12"
+            },
+            "result": {
+              "status": "passed",
+              "duration": 206751041
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "And ",
+            "line": 6,
+            "name": "the user logs in via the auth API",
+            "match": {
+              "location": "tests/cucumber/auth.steps.cjs:26"
+            },
+            "result": {
+              "status": "passed",
+              "duration": 201223625
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "Then ",
+            "line": 7,
+            "name": "the login response contains a token and user",
+            "match": {
+              "location": "tests/cucumber/auth.steps.cjs:42"
+            },
+            "result": {
+              "status": "passed",
+              "duration": 62084
+            }
+          }
+        ],
+        "tags": [],
+        "type": "scenario"
+      },
+      {
+        "description": "",
+        "id": "user-authentication;user-login-fails-with-wrong-password",
+        "keyword": "Scenario",
+        "line": 9,
+        "name": "User login fails with wrong password",
+        "steps": [
+          {
+            "arguments": [],
+            "keyword": "Given ",
+            "line": 10,
+            "name": "a unique user registration payload for auth fail",
+            "match": {
+              "location": "tests/cucumber/auth.steps.cjs:47"
+            },
+            "result": {
+              "status": "passed",
+              "duration": 34041
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "When ",
+            "line": 11,
+            "name": "the user registers via the auth API for fail",
+            "match": {
+              "location": "tests/cucumber/auth.steps.cjs:51"
+            },
+            "result": {
+              "status": "passed",
+              "duration": 203664999
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "And ",
+            "line": 12,
+            "name": "the user attempts to log in with a wrong password",
+            "match": {
+              "location": "tests/cucumber/auth.steps.cjs:65"
+            },
+            "result": {
+              "status": "passed",
+              "duration": 199277958
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "Then ",
+            "line": 13,
+            "name": "the login fails with status 401 and error",
+            "match": {
+              "location": "tests/cucumber/auth.steps.cjs:77"
+            },
+            "result": {
+              "status": "passed",
+              "duration": 155666
+            }
+          }
+        ],
+        "tags": [],
+        "type": "scenario"
+      }
+    ],
+    "id": "user-authentication",
+    "line": 1,
+    "keyword": "Feature",
+    "name": "User authentication",
+    "tags": [],
+    "uri": "tests/cucumber/auth.feature"
+  }
+]

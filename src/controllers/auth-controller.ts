@@ -80,6 +80,7 @@ export class AuthController {
         password: hashedPassword,
         firstName,
         lastName,
+        name: `${firstName} ${lastName}`,
         role: role || "user", // Default to "user" if no role specified
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
