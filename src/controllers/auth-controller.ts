@@ -106,10 +106,17 @@ export class AuthController {
           lastName: user.lastName,
         },
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Registration error:", error);
-      // Handle unique constraint errors specifically
-      if (error?.code === 'SQLITE_CONSTRAINT_UNIQUE' || error?.message?.includes('UNIQUE constraint')) {
+      // Type guard for error object
+      if (
+        typeof error === "object" &&
+        error !== null &&
+        (("code" in error && (error as { code: string }).code === "SQLITE_CONSTRAINT_UNIQUE") ||
+          ("message" in error &&
+            typeof (error as { message: string }).message === "string" &&
+            (error as { message: string }).message.includes("UNIQUE constraint")))
+      ) {
         res.status(409).json({ error: "Email already exists" });
         return;
       }
