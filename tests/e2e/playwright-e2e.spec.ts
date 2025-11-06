@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 
-// This test assumes the backend is running locally on port 3000
+// This test assumes the backend is running locally on port 3001
 // and that the API endpoints for auth and application exist as per the routes in src/routes/
 
 test("User registers and logs in", async ({ request }) => {
