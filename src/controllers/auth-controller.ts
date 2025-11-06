@@ -106,7 +106,13 @@ export class AuthController {
           lastName: user.lastName,
         },
       });
-    } catch (error) {
+    } catch (error: any) {
+      console.error("Registration error:", error);
+      // Handle unique constraint errors specifically
+      if (error?.code === 'SQLITE_CONSTRAINT_UNIQUE' || error?.message?.includes('UNIQUE constraint')) {
+        res.status(409).json({ error: "Email already exists" });
+        return;
+      }
       handleError(error, res, "Failed to register");
     }
   }

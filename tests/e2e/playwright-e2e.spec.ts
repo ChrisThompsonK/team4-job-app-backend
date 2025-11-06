@@ -5,7 +5,7 @@ import { test, expect } from '@playwright/test';
 
 test('User registers and logs in', async ({ request }) => {
   // 1. Register a new user
-  const uniqueEmail = `e2euser+${Date.now()}@example.com`;
+  const uniqueEmail = `e2euser+${Date.now()}.${Math.random().toString(36).substring(7)}@example.com`;
   const registerResponse = await request.post('http://localhost:3001/api/auth/register', {
     data: {
       email: uniqueEmail,
@@ -14,6 +14,9 @@ test('User registers and logs in', async ({ request }) => {
       lastName: 'User'
     }
   });
+  if (!registerResponse.ok()) {
+    console.error('Register failed:', await registerResponse.text());
+  }
   expect(registerResponse.ok()).toBeTruthy();
 
   // 2. Log in with the new user
@@ -30,7 +33,7 @@ test('User registers and logs in', async ({ request }) => {
 });
 
 test('User login fails with wrong password', async ({ request }) => {
-  const uniqueEmail = `e2euserfail+${Date.now()}@example.com`;
+  const uniqueEmail = `e2euserfail+${Date.now()}.${Math.random().toString(36).substring(7)}@example.com`;
   // Register user first
   const registerResponse = await request.post('http://localhost:3001/api/auth/register', {
     data: {
