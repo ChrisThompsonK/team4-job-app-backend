@@ -1,7 +1,7 @@
 import { defineConfig, devices } from "@playwright/test";
 
 export default defineConfig({
-  testDir: "./tests/e2e",
+  testDir: "./tests/api",
   retries: 0,
   reporter: [["list"], ["html"]],
   use: {

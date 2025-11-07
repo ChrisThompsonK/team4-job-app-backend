@@ -10,7 +10,7 @@ export default defineConfig({
       ".idea",
       ".git",
       ".cache",
-      "tests/e2e/playwright-e2e.spec.ts",
+      "tests/api/playwright-api.spec.ts",
     ],
 
     // Environment settings

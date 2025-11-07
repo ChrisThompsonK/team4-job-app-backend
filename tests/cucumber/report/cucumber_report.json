@@ -15,11 +15,11 @@
             "line": 4,
             "name": "a unique user registration payload for auth",
             "match": {
-              "location": "tests/cucumber/auth.steps.cjs:8"
+              "location": "tests/cucumber/auth.steps.cjs:13"
             },
             "result": {
               "status": "passed",
-              "duration": 515417
+              "duration": 567541
             }
           },
           {
@@ -28,11 +28,12 @@
             "line": 5,
             "name": "the user registers via the auth API",
             "match": {
-              "location": "tests/cucumber/auth.steps.cjs:12"
+              "location": "tests/cucumber/auth.steps.cjs:17"
             },
             "result": {
-              "status": "passed",
-              "duration": 254031917
+              "status": "failed",
+              "duration": 9430207,
+              "error_message": "FetchError: request to http://localhost:3001/api/auth/register failed, reason: \n    at ClientRequest.<anonymous> (/Users/erinwilkinson/Desktop/Job-App/team4-job-app-backend/node_modules/node-fetch/lib/index.js:1501:11)\n    at ClientRequest.emit (node:events:524:28)\n    at emitErrorEvent (node:_http_client:101:11)\n    at Socket.socketErrorListener (node:_http_client:504:5)\n    at Socket.emit (node:events:524:28)\n    at emitErrorNT (node:internal/streams/destroy:169:8)\n    at emitErrorCloseNT (node:internal/streams/destroy:128:3)\n    at process.processTicksAndRejections (node:internal/process/task_queues:82:21)"
             }
           },
           {
@@ -41,11 +42,11 @@
             "line": 6,
             "name": "the user logs in via the auth API",
             "match": {
-              "location": "tests/cucumber/auth.steps.cjs:26"
+              "location": "tests/cucumber/auth.steps.cjs:31"
             },
             "result": {
-              "status": "passed",
-              "duration": 205696791
+              "status": "skipped",
+              "duration": 0
             }
           },
           {
@@ -54,11 +55,11 @@
             "line": 7,
             "name": "the login response contains a token and user",
             "match": {
-              "location": "tests/cucumber/auth.steps.cjs:42"
+              "location": "tests/cucumber/auth.steps.cjs:47"
             },
             "result": {
-              "status": "passed",
-              "duration": 255125
+              "status": "skipped",
+              "duration": 0
             }
           }
         ],
@@ -78,11 +79,11 @@
             "line": 10,
             "name": "a unique user registration payload for auth fail",
             "match": {
-              "location": "tests/cucumber/auth.steps.cjs:47"
+              "location": "tests/cucumber/auth.steps.cjs:52"
             },
             "result": {
               "status": "passed",
-              "duration": 166790
+              "duration": 41333
             }
           },
           {
@@ -91,11 +92,12 @@
             "line": 11,
             "name": "the user registers via the auth API for fail",
             "match": {
-              "location": "tests/cucumber/auth.steps.cjs:51"
+              "location": "tests/cucumber/auth.steps.cjs:56"
             },
             "result": {
-              "status": "passed",
-              "duration": 205213291
+              "status": "failed",
+              "duration": 1181791,
+              "error_message": "FetchError: request to http://localhost:3001/api/auth/register failed, reason: \n    at ClientRequest.<anonymous> (/Users/erinwilkinson/Desktop/Job-App/team4-job-app-backend/node_modules/node-fetch/lib/index.js:1501:11)\n    at ClientRequest.emit (node:events:524:28)\n    at emitErrorEvent (node:_http_client:101:11)\n    at Socket.socketErrorListener (node:_http_client:504:5)\n    at Socket.emit (node:events:524:28)\n    at emitErrorNT (node:internal/streams/destroy:169:8)\n    at emitErrorCloseNT (node:internal/streams/destroy:128:3)\n    at process.processTicksAndRejections (node:internal/process/task_queues:82:21)"
             }
           },
           {
@@ -104,11 +106,11 @@
             "line": 12,
             "name": "the user attempts to log in with a wrong password",
             "match": {
-              "location": "tests/cucumber/auth.steps.cjs:65"
+              "location": "tests/cucumber/auth.steps.cjs:70"
             },
             "result": {
-              "status": "passed",
-              "duration": 204664708
+              "status": "skipped",
+              "duration": 0
             }
           },
           {
@@ -117,11 +119,11 @@
             "line": 13,
             "name": "the login fails with status 401 and error",
             "match": {
-              "location": "tests/cucumber/auth.steps.cjs:77"
+              "location": "tests/cucumber/auth.steps.cjs:82"
             },
             "result": {
-              "status": "passed",
-              "duration": 843292
+              "status": "skipped",
+              "duration": 0
             }
           }
         ],
