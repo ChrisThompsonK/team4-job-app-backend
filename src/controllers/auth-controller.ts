@@ -80,6 +80,7 @@ export class AuthController {
         password: hashedPassword,
         firstName,
         lastName,
+        name: `${firstName} ${lastName}`,
         role: role || "user", // Default to "user" if no role specified
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
@@ -105,7 +106,20 @@ export class AuthController {
           lastName: user.lastName,
         },
       });
-    } catch (error) {
+    } catch (error: unknown) {
+      console.error("Registration error:", error);
+      // Type guard for error object
+      if (
+        typeof error === "object" &&
+        error !== null &&
+        (("code" in error && (error as { code: string }).code === "SQLITE_CONSTRAINT_UNIQUE") ||
+          ("message" in error &&
+            typeof (error as { message: string }).message === "string" &&
+            (error as { message: string }).message.includes("UNIQUE constraint")))
+      ) {
+        res.status(409).json({ error: "Email already exists" });
+        return;
+      }
       handleError(error, res, "Failed to register");
     }
   }
