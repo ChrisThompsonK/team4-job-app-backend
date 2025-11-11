@@ -3,11 +3,11 @@
   "version": "1.0.0",
   "description": "Backend API for Team 4 Job Application Project",
   "type": "module",
-  "main": "dist/src/index.js",
+  "main": "dist/index.js",
   "scripts": {
     "build": "tsc",
     "dev": "tsx watch src/index.ts",
-    "start": "node dist/src/index.js",
+    "start": "node dist/index.js",
     "start:prod": "npm run build && npm start",
     "test": "vitest",
     "test:run": "vitest run",

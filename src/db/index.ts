@@ -5,7 +5,9 @@ import { drizzle } from "drizzle-orm/better-sqlite3";
 import * as schema from "./schema.js";
 
 // Create database file path
-const dbPath = process.env.DATABASE_URL || "./data/database.sqlite";
+const dbUrl = process.env.DATABASE_URL || "./data/database.sqlite";
+// Remove 'file:' prefix if present
+const dbPath = dbUrl.replace(/^file:/, "");
 
 // Ensure the directory exists
 const dbDir = dirname(dbPath);
