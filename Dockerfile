@@ -20,6 +20,10 @@ FROM node:20-alpine
 
 WORKDIR /app
 
+# Create non-root user and group
+RUN addgroup -g 1001 -S nodejs && \
+    adduser -S nodejs -u 1001 -G nodejs
+
 # Copy package files
 COPY package*.json ./
 
@@ -40,12 +44,14 @@ RUN mkdir -p /app/data
 # Create uploads directory for file uploads
 RUN mkdir -p /app/uploads/cvs
 
-# Copy and set permissions for entrypoint script
-COPY docker-entrypoint.sh /usr/local/bin/
-RUN chmod +x /usr/local/bin/docker-entrypoint.sh
+# Change ownership of app directory to non-root user
+RUN chown -R nodejs:nodejs /app
+
+# Switch to non-root user
+USER nodejs
 
 # Expose port
 EXPOSE 3001
 
-# Start the application with entrypoint script
-ENTRYPOINT ["docker-entrypoint.sh"]
+# Start the application
+CMD ["npm", "start"]
