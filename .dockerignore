@@ -1,0 +1,14 @@
+node_modules
+npm-debug.log
+.git
+.gitignore
+dist
+coverage
+tests
+*.md
+.env
+.env.local
+.DS_Store
+data/database.sqlite
+data/database.sqlite-shm
+data/database.sqlite-wal
