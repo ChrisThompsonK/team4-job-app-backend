@@ -32,26 +32,20 @@ RUN npm ci --omit=dev
 
 # Copy built application from builder
 COPY --from=builder /app/dist ./dist
-
-# Copy database migrations and schema
 COPY --from=builder /app/drizzle ./drizzle
 COPY --from=builder /app/drizzle.config.ts ./drizzle.config.ts
-COPY --from=builder /app/auth-schema.ts ./auth-schema.ts
-
-# Create data directory for SQLite database
-RUN mkdir -p /app/data
-
-# Create uploads directory for file uploads
-RUN mkdir -p /app/uploads/cvs
 
 # Change ownership of app directory to non-root user
 RUN chown -R nodejs:nodejs /app
+
+# Set default port (can be overridden)
+ENV PORT=3001
 
 # Switch to non-root user
 USER nodejs
 
 # Expose port
-EXPOSE 3001
+EXPOSE $PORT
 
 # Start the application
 CMD ["npm", "start"]
