@@ -50,8 +50,11 @@ RUN chown -R nodejs:nodejs /app
 # Switch to non-root user
 USER nodejs
 
+# Set default port (can be overridden)
+ENV PORT=3001
+
 # Expose port
-EXPOSE 3001
+EXPOSE $PORT
 
 # Start the application
 CMD ["npm", "start"]
