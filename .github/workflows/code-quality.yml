@@ -151,7 +151,7 @@ jobs:
       - name: Test Docker image
         run: |
           echo "✅ Testing if the image was built successfully..."
-          docker images | grep team4-job-app-backend || docker images | grep ${{ env.IMAGE_NAME }}
+          docker images | grep ${{ env.IMAGE_NAME }}
           echo ""
           if [ "${{ steps.meta.outputs.is_main_push }}" = "true" ]; then
             echo "📦 Image pushed to ACR with tags:"
