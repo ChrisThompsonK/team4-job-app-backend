@@ -108,9 +108,14 @@ jobs:
           echo "sha_short=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
           echo "pr_number=${{ github.event.pull_request.number }}" >> $GITHUB_OUTPUT
           echo "github_ref=${{ github.ref }}" >> $GITHUB_OUTPUT
+          if [ "${{ github.event_name }}" = "push" ] && [ "${{ github.ref }}" = "refs/heads/main" ]; then
+            echo "is_main_push=true" >> $GITHUB_OUTPUT
+          else
+            echo "is_main_push=false" >> $GITHUB_OUTPUT
+          fi
 
       - name: Login to Azure Container Registry
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        if: steps.meta.outputs.is_main_push == 'true'
         uses: docker/login-action@v3
         with:
           registry: ${{ env.REGISTRY }}
@@ -118,7 +123,7 @@ jobs:
           password: ${{ secrets.AZURE_CLIENT_SECRET }}
 
       - name: Build and push Docker image (main branch)
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        if: steps.meta.outputs.is_main_push == 'true'
         uses: docker/build-push-action@v5
         with:
           context: .
@@ -138,7 +143,7 @@ jobs:
           push: false
           tags: |
             ${{ env.IMAGE_NAME }}:${{ steps.meta.outputs.sha_short }}
-            ${{ env.IMAGE_NAME }}:pr-${{ steps.meta.outputs.pr_number }}
+            ${{ github.event_name == 'pull_request' && format('{0}:{1}', env.IMAGE_NAME, format('pr-{0}', steps.meta.outputs.pr_number)) || '' }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
           load: true
@@ -148,7 +153,7 @@ jobs:
           echo "✅ Testing if the image was built successfully..."
           docker images | grep team4-job-app-backend || docker images | grep ${{ env.IMAGE_NAME }}
           echo ""
-          if [ "${{ github.event_name }}" = "push" ] && [ "${{ github.ref }}" = "refs/heads/main" ]; then
+          if [ "${{ steps.meta.outputs.is_main_push }}" = "true" ]; then
             echo "📦 Image pushed to ACR with tags:"
             echo "  - ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest"
             echo "  - ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:main"
@@ -159,7 +164,7 @@ jobs:
           fi
 
       - name: Verify ACR image push
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        if: steps.meta.outputs.is_main_push == 'true'
         run: |
           echo "✅ Docker image successfully pushed to Azure Container Registry!"
           echo "Registry: ${{ env.REGISTRY }}"
