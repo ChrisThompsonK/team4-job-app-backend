@@ -102,19 +102,13 @@ jobs:
         id: meta
         run: |
           echo "sha_short=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
-          # Sanitize branch name for Docker tag (replace / with -)
-          echo "branch=$(echo ${GITHUB_REF#refs/heads/} | tr '/' '-')" >> $GITHUB_OUTPUT
-          echo "date=$(date +'%Y%m%d')" >> $GITHUB_OUTPUT
 
       - name: Build Docker image
         uses: docker/build-push-action@v5
         with:
           context: .
           push: false
-          tags: |
-            team4-job-app-backend:${{ steps.meta.outputs.sha_short }}
-            team4-job-app-backend:${{ steps.meta.outputs.branch }}-latest
-            team4-job-app-backend:${{ steps.meta.outputs.branch }}-${{ steps.meta.outputs.date }}
+          tags: team4-job-app-backend:${{ steps.meta.outputs.sha_short }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
           load: true
@@ -124,7 +118,5 @@ jobs:
           echo "✅ Testing if the image was built successfully..."
           docker images | grep team4-job-app-backend
           echo ""
-          echo "📦 Image built successfully with tags:"
+          echo "📦 Image built successfully with tag:"
           echo "  - team4-job-app-backend:${{ steps.meta.outputs.sha_short }}"
-          echo "  - team4-job-app-backend:${{ steps.meta.outputs.branch }}-latest"
-          echo "  - team4-job-app-backend:${{ steps.meta.outputs.branch }}-${{ steps.meta.outputs.date }}"
