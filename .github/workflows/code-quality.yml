@@ -1,4 +1,4 @@
-name: Code Quality
+name: CI Pipeline
 
 on:
   push:
@@ -7,19 +7,24 @@ on:
     branches: [main]
 
 jobs:
-  biome-check:
-    name: Biome Check
+  # ========================================
+  # STAGE 1: Test & Quality Checks
+  # Jobs in this stage run in parallel
+  # ========================================
+
+  code-quality:
+    name: 🔍 Code Quality (Biome)
     runs-on: ubuntu-latest
 
     steps:
-      - name: Code quality checks
+      - name: Checkout code
         uses: actions/checkout@v4
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
-          cache: 'npm'
+          node-version: "20"
+          cache: "npm"
 
       - name: Install dependencies
         run: npm ci
@@ -30,10 +35,9 @@ jobs:
       - name: Run Biome format check
         run: npm run format:check
 
-  test:
-    name: Run Tests
+  unit-tests:
+    name: 🧪 Unit Tests
     runs-on: ubuntu-latest
-    needs: biome-check
 
     steps:
       - name: Checkout code
@@ -42,32 +46,77 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
-          cache: 'npm'
+          node-version: "20"
+          cache: "npm"
 
       - name: Install dependencies
         run: npm ci
 
-      - name: Run tests
+      - name: Run unit tests
         run: npm run test:run
 
-  build:
-    name: Build
+  # ========================================
+  # STAGE 2: Build
+  # Only runs if all tests pass
+  # ========================================
+
+  build-application:
+    name: 🏗️ Build Application
     runs-on: ubuntu-latest
-    needs: [biome-check, test]
+    needs: [code-quality, unit-tests]
 
     steps:
-      - name: Code quality checks
+      - name: Checkout code
         uses: actions/checkout@v4
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
-          cache: 'npm'
+          node-version: "20"
+          cache: "npm"
 
       - name: Install dependencies
         run: npm ci
 
       - name: Build project
         run: npm run build
+
+  # ========================================
+  # STAGE 3: Container Build
+  # Only runs if build succeeds
+  # ========================================
+
+  build-container:
+    name: 🐳 Build Docker Image
+    runs-on: ubuntu-latest
+    needs: [build-application]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Extract metadata
+        id: meta
+        run: |
+          echo "sha_short=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+
+      - name: Build Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: false
+          tags: team4-job-app-backend:${{ steps.meta.outputs.sha_short }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          load: true
+
+      - name: Test Docker image
+        run: |
+          echo "✅ Testing if the image was built successfully..."
+          docker images | grep team4-job-app-backend
+          echo ""
+          echo "📦 Image built successfully with tag:"
+          echo "  - team4-job-app-backend:${{ steps.meta.outputs.sha_short }}"
