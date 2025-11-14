@@ -60,6 +60,35 @@ jobs:
       - name: Run unit tests
         run: npm run test:run
 
+  terraform-validate:
+    name: 🏗️ Terraform Validation
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.9.0
+
+      - name: Terraform Format Check
+        id: fmt
+        run: terraform fmt -check -recursive
+        working-directory: ./terraform
+        continue-on-error: true
+
+      - name: Terraform Init
+        id: init
+        run: terraform init -backend=false
+        working-directory: ./terraform
+
+      - name: Terraform Validate
+        id: validate
+        run: terraform validate
+        working-directory: ./terraform
+
   # ========================================
   # STAGE 2: Build
   # Only runs if all tests pass
@@ -68,7 +97,7 @@ jobs:
   build-application:
     name: 🏗️ Build Application
     runs-on: ubuntu-latest
-    needs: [code-quality, unit-tests]
+    needs: [code-quality, unit-tests, terraform-validate]
 
     steps:
       - name: Checkout code
