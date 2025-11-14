@@ -7,7 +7,8 @@ on:
     branches: [main]
 
 env:
-  REGISTRY: ${{ secrets.ACR_REGISTRY_URL }}
+  REGISTRY: aiacademy25-bbaue6bgenhkd0dj.azurecr.io
+  REGISTRY_NAME: aiacademy25-bbaue6bgenhkd0dj
   IMAGE_NAME: team4-job-app-backend
 
 jobs:
@@ -122,8 +123,7 @@ jobs:
 
       - name: Login to Azure Container Registry
         if: steps.meta.outputs.is_main_push == 'true'
-        run: |
-          az acr login --name $(echo ${{ env.REGISTRY }} | cut -d. -f1)
+        run: az acr login --name ${{ env.REGISTRY_NAME }}
 
       - name: Build Docker image
         uses: docker/build-push-action@v5
