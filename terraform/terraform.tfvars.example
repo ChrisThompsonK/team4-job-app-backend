@@ -1,0 +1,31 @@
+# Azure Configuration
+azure_subscription_id = "your-subscription-id-here"
+
+# Project Configuration
+project_name = "team4-job-app"
+environment  = "prod"
+location     = "uksouth"
+
+# Docker Configuration
+docker_image_name = "team4-job-app-backend"
+docker_image_tag  = "latest"
+
+# Application Configuration
+app_port = "3000"
+
+# CORS Configuration
+cors_allowed_origins = [
+  "https://your-frontend-domain.com",
+  "http://localhost:5173"
+]
+
+# Security Secrets (use Azure Key Vault or GitHub Secrets in production)
+jwt_secret     = "your-jwt-secret-here"
+session_secret = "your-session-secret-here"
+
+# Tags
+tags = {
+  Project     = "Team4-Job-App"
+  ManagedBy   = "Terraform"
+  Environment = "Production"
+}
