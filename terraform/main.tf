@@ -45,7 +45,7 @@ resource "azurerm_service_plan" "main" {
   os_type             = "Linux"
   # B1 is the Basic tier: low cost, shared infrastructure, no auto-scaling.
   # Chosen for cost savings and suitable for low-traffic workloads. Consider upgrading if scaling or dedicated resources are needed.
-  sku_name            = "B1"
+  sku_name = "B1"
 
   tags = var.tags
 }
@@ -58,8 +58,6 @@ resource "azurerm_linux_web_app" "main" {
   service_plan_id     = azurerm_service_plan.main.id
 
   site_config {
-    always_on = true
-
     application_stack {
       docker_registry_url      = "https://${azurerm_container_registry.main.login_server}"
       docker_registry_username = azurerm_container_registry.main.admin_username
