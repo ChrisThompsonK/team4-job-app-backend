@@ -151,8 +151,8 @@ jobs:
         if: steps.meta.outputs.is_main_push == 'true'
         run: |
           docker tag ${{ env.IMAGE_NAME }}:${{ steps.meta.outputs.sha_short }} ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
-          docker push ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
           docker tag ${{ env.IMAGE_NAME }}:${{ steps.meta.outputs.sha_short }} ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.meta.outputs.sha_short }}
+          docker push ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
           docker push ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.meta.outputs.sha_short }}
 
       - name: Verify ACR image push
