@@ -36,8 +36,8 @@ variable "docker_image_tag" {
 
 variable "app_port" {
   description = "Application port"
-  type        = string
-  default     = "3000"
+  type        = number
+  default     = 3000
 }
 
 variable "cors_allowed_origins" {
