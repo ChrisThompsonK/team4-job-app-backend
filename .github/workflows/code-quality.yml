@@ -107,8 +107,6 @@ jobs:
         id: meta
         run: |
           echo "sha_short=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
-          echo "pr_number=${{ github.event.pull_request.number }}" >> $GITHUB_OUTPUT
-          echo "github_ref=${{ github.ref }}" >> $GITHUB_OUTPUT
           if [ "${{ github.event_name }}" = "push" ] && [ "${{ github.ref }}" = "refs/heads/main" ]; then
             echo "is_main_push=true" >> $GITHUB_OUTPUT
           else
