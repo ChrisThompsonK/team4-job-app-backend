@@ -125,17 +125,18 @@ jobs:
         run: |
           az acr login --name $(echo ${{ env.REGISTRY }} | cut -d. -f1)
 
-      - name: Build and push Docker image (main branch)
+      - name: Build Docker image (main branch)
         if: steps.meta.outputs.is_main_push == 'true'
         uses: docker/build-push-action@v5
         with:
           context: .
-          push: true
+          push: false
           tags: |
             ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
             ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.meta.outputs.sha_short }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+          load: true
 
       - name: Build Docker image (PR or feature branch)
         if: github.event_name == 'pull_request' || (github.event_name == 'push' && github.ref != 'refs/heads/main')
@@ -156,13 +157,25 @@ jobs:
           docker images | grep ${{ env.IMAGE_NAME }}
           echo ""
           if [ "${{ steps.meta.outputs.is_main_push }}" = "true" ]; then
-            echo "📦 Image pushed to ACR with tags:"
+            echo "📦 Image built for ACR with tags:"
             echo "  - ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest"
             echo "  - ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.meta.outputs.sha_short }}"
           else
             echo "📦 Image built locally with tag:"
             echo "  - ${{ env.IMAGE_NAME }}:${{ steps.meta.outputs.sha_short }}"
           fi
+
+      - name: Push Docker image to ACR
+        if: steps.meta.outputs.is_main_push == 'true'
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: |
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.meta.outputs.sha_short }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
 
       - name: Verify ACR image push
         if: steps.meta.outputs.is_main_push == 'true'
