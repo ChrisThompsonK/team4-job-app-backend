@@ -158,7 +158,6 @@ jobs:
           if [ "${{ steps.meta.outputs.is_main_push }}" = "true" ]; then
             echo "📦 Image pushed to ACR with tags:"
             echo "  - ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest"
-            echo "  - ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:main"
             echo "  - ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.meta.outputs.sha_short }}"
           else
             echo "📦 Image built locally with tag:"
