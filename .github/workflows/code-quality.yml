@@ -8,7 +8,7 @@ on:
 
 env:
   REGISTRY: aiacademy25-bbaue6bgenhkd0dj.azurecr.io
-  REGISTRY_NAME: aiacademy25-bbaue6bgenhkd0dj
+  REGISTRY_NAME: aiacademy25
   IMAGE_NAME: team4-job-app-backend
 
 jobs:
