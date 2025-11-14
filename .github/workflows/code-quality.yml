@@ -114,13 +114,16 @@ jobs:
             echo "is_main_push=false" >> $GITHUB_OUTPUT
           fi
 
+      - name: Login to Azure
+        if: steps.meta.outputs.is_main_push == 'true'
+        uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
       - name: Login to Azure Container Registry
         if: steps.meta.outputs.is_main_push == 'true'
-        uses: docker/login-action@v3
-        with:
-          registry: ${{ env.REGISTRY }}
-          username: ${{ secrets.AZURE_CLIENT_ID }}
-          password: ${{ secrets.AZURE_CLIENT_SECRET }}
+        run: |
+          az acr login --name $(echo ${{ env.REGISTRY }} | cut -d. -f1)
 
       - name: Build and push Docker image (main branch)
         if: steps.meta.outputs.is_main_push == 'true'
@@ -130,7 +133,6 @@ jobs:
           push: true
           tags: |
             ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
-            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:main
             ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.meta.outputs.sha_short }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
