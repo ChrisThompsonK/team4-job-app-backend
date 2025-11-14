@@ -6,6 +6,11 @@ on:
   pull_request:
     branches: [main]
 
+env:
+  REGISTRY: aiacademy25-bbaue6bgenhkd0dj.azurecr.io
+  REGISTRY_NAME: aiacademy25-bbaue6bgenhkd0dj
+  IMAGE_NAME: team4-job-app-backend
+
 jobs:
   # ========================================
   # STAGE 1: Test & Quality Checks
@@ -102,13 +107,28 @@ jobs:
         id: meta
         run: |
           echo "sha_short=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+          if [ "${{ github.event_name }}" = "push" ] && [ "${{ github.ref }}" = "refs/heads/main" ]; then
+            echo "is_main_push=true" >> $GITHUB_OUTPUT
+          else
+            echo "is_main_push=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Login to Azure
+        if: steps.meta.outputs.is_main_push == 'true'
+        uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Login to Azure Container Registry
+        if: steps.meta.outputs.is_main_push == 'true'
+        run: az acr login --name ${{ env.REGISTRY_NAME }}
 
       - name: Build Docker image
         uses: docker/build-push-action@v5
         with:
           context: .
           push: false
-          tags: team4-job-app-backend:${{ steps.meta.outputs.sha_short }}
+          tags: ${{ env.IMAGE_NAME }}:${{ steps.meta.outputs.sha_short }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
           load: true
@@ -116,7 +136,29 @@ jobs:
       - name: Test Docker image
         run: |
           echo "✅ Testing if the image was built successfully..."
-          docker images | grep team4-job-app-backend
+          docker images | grep ${{ env.IMAGE_NAME }}
           echo ""
-          echo "📦 Image built successfully with tag:"
-          echo "  - team4-job-app-backend:${{ steps.meta.outputs.sha_short }}"
+          if [ "${{ steps.meta.outputs.is_main_push }}" = "true" ]; then
+            echo "📦 Image built for ACR with tags:"
+            echo "  - ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest"
+            echo "  - ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.meta.outputs.sha_short }}"
+          else
+            echo "📦 Image built locally with tag:"
+            echo "  - ${{ env.IMAGE_NAME }}:${{ steps.meta.outputs.sha_short }}"
+          fi
+
+      - name: Push Docker image to ACR
+        if: steps.meta.outputs.is_main_push == 'true'
+        run: |
+          docker tag ${{ env.IMAGE_NAME }}:${{ steps.meta.outputs.sha_short }} ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+          docker tag ${{ env.IMAGE_NAME }}:${{ steps.meta.outputs.sha_short }} ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.meta.outputs.sha_short }}
+          docker push ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+          docker push ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.meta.outputs.sha_short }}
+
+      - name: Verify ACR image push
+        if: steps.meta.outputs.is_main_push == 'true'
+        run: |
+          echo "✅ Docker image successfully pushed to Azure Container Registry!"
+          echo "Registry: ${{ env.REGISTRY }}"
+          echo "Image: ${{ env.IMAGE_NAME }}"
+          echo "Commit SHA: ${{ steps.meta.outputs.sha_short }}"
