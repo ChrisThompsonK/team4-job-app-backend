@@ -125,28 +125,12 @@ jobs:
         run: |
           az acr login --name $(echo ${{ env.REGISTRY }} | cut -d. -f1)
 
-      - name: Build Docker image (main branch)
-        if: steps.meta.outputs.is_main_push == 'true'
+      - name: Build Docker image
         uses: docker/build-push-action@v5
         with:
           context: .
           push: false
-          tags: |
-            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
-            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.meta.outputs.sha_short }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-          load: true
-
-      - name: Build Docker image (PR or feature branch)
-        if: github.event_name == 'pull_request' || (github.event_name == 'push' && github.ref != 'refs/heads/main')
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          push: false
-          tags: |
-            ${{ env.IMAGE_NAME }}:${{ steps.meta.outputs.sha_short }}
-            ${{ github.event_name == 'pull_request' && format('{0}:{1}', env.IMAGE_NAME, format('pr-{0}', steps.meta.outputs.pr_number)) || '' }}
+          tags: ${{ env.IMAGE_NAME }}:${{ steps.meta.outputs.sha_short }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
           load: true
@@ -167,15 +151,9 @@ jobs:
 
       - name: Push Docker image to ACR
         if: steps.meta.outputs.is_main_push == 'true'
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          push: true
-          tags: |
-            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
-            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.meta.outputs.sha_short }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+        run: |
+          docker tag ${{ env.IMAGE_NAME }}:${{ steps.meta.outputs.sha_short }} ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+          docker push ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
 
       - name: Verify ACR image push
         if: steps.meta.outputs.is_main_push == 'true'
