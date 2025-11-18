@@ -28,7 +28,7 @@ resource "azurerm_resource_group" "main" {
 
 # Storage Account for SQLite database and uploads
 resource "azurerm_storage_account" "main" {
-  name                     = "${replace(var.project_name, "-", "")}${var.environment}sa"
+  name                     = "${substr(md5("${var.project_name}-${var.environment}"), 0, 20)}sa"
   resource_group_name      = azurerm_resource_group.main.name
   location                 = azurerm_resource_group.main.location
   account_tier             = "Standard"
