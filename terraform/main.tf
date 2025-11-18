@@ -45,7 +45,7 @@ resource "azurerm_service_plan" "main" {
   os_type             = "Linux"
   # B1 is the Basic tier: low cost, shared infrastructure, no auto-scaling.
   # Chosen for cost savings and suitable for low-traffic workloads. Consider upgrading if scaling or dedicated resources are needed.
-  sku_name            = "B1"
+  sku_name = "B1"
 
   tags = var.tags
 }
