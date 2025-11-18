@@ -22,40 +22,14 @@ variable "location" {
   default     = "uksouth"
 }
 
-variable "docker_image_name" {
-  description = "Docker image name for the application"
+variable "existing_container_registry_name" {
+  description = "Name of the existing Azure Container Registry to use"
   type        = string
-  default     = "team4-job-app-backend"
 }
 
-variable "docker_image_tag" {
-  description = "Docker image tag"
+variable "existing_container_registry_rg" {
+  description = "Resource group name where the existing Container Registry is located"
   type        = string
-  default     = "latest"
-}
-
-variable "app_port" {
-  description = "Application port"
-  type        = number
-  default     = 3000
-}
-
-variable "cors_allowed_origins" {
-  description = "List of allowed CORS origins"
-  type        = list(string)
-  default     = ["*"]
-}
-
-variable "jwt_secret" {
-  description = "JWT secret for authentication"
-  type        = string
-  sensitive   = true
-}
-
-variable "session_secret" {
-  description = "Session secret for authentication"
-  type        = string
-  sensitive   = true
 }
 
 variable "tags" {

@@ -6,22 +6,9 @@ project_name = "team4-job-app"
 environment  = "prod"
 location     = "uksouth"
 
-# Docker Configuration
-docker_image_name = "team4-job-app-backend"
-docker_image_tag  = "latest"
-
-# Application Configuration
-app_port = 3000
-
-# CORS Configuration
-cors_allowed_origins = [
-  "https://your-frontend-domain.com",
-  "http://localhost:5173"
-]
-
-# Security Secrets (use Azure Key Vault or GitHub Secrets in production)
-jwt_secret     = "your-jwt-secret-here"
-session_secret = "your-session-secret-here"
+# Existing Container Registry (required)
+existing_container_registry_name = "your-existing-acr-name"
+existing_container_registry_rg   = "your-existing-acr-resource-group"
 
 # Tags
 tags = {
