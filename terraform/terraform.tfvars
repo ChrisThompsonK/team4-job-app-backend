@@ -1,6 +1,4 @@
 # Example terraform.tfvars file for Team4 Job App Backend
-# Copy this file to terraform.tfvars and customize the values as needed
-
 # Core Infrastructure
 resource_group_name = "rg-team4-jobapp-backend-dev"
 location            = "UK South"
