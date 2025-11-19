@@ -106,9 +106,6 @@ resource "azurerm_linux_web_app" "backend" {
       docker_image     = "${azurerm_container_registry.acr.login_server}/${var.docker_image_name}"
       docker_image_tag = var.docker_image_tag
     }
-
-    # Health check configuration
-    health_check_path = "/health"
   }
 
   # Application settings

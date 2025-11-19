@@ -1,16 +1,5 @@
 import { describe, expect, it } from "vitest";
 
-describe("API Health Check", () => {
-  it("should export basic functionality", () => {
-    // Basic test to ensure the test runner works
-    expect(true).toBe(true);
-  });
-
-  it("should handle basic math operations", () => {
-    expect(2 + 2).toBe(4);
-  });
-});
-
 describe("JobRole Interface", () => {
   it("should validate JobRole structure", () => {
     const mockJobRole = {

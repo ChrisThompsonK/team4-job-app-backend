@@ -37,11 +37,9 @@ app.use("/api/applications", applicationsRouter);
 app.use("/api/files", filesRouter);
 app.use("/api/admin", adminRouter);
 
-// Health check endpoint
 app.get("/", (_req, res) => {
   res.json({
     message: "Job Application Backend API",
-    status: "healthy",
     endpoints: {
       // Authentication endpoints (JWT + Better Auth)
       register: "POST /api/auth/register",
