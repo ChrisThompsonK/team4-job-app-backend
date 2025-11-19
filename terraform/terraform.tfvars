@@ -1,18 +1,23 @@
-# Example terraform.tfvars file for Team4 Job App Backend
+# Default terraform.tfvars file for Team4 Job App Backend
+# Note: For pipeline deployments, use environment-specific files in environments/ folder
+
 # Core Infrastructure
-resource_group_name = "rg-team4-jobapp-backend-dev"
-location            = "UK South"
-environment         = "dev"
+location    = "UK South"
+environment = "dev"
 
 # Project Configuration
 project_name = "jobapp"
 team_name    = "team4"
 
-# Additional tags (optional)
+# Pipeline Configuration (can be overridden by CI/CD)
+ci_cd        = false
+git_branch   = "local"
+build_number = "local-dev"
+
+# Common tags (will be merged with environment-specific tags in main.tf)
 common_tags = {
-  Environment = "dev"
-  ManagedBy   = "Terraform"
-  Project     = "JobApp-Backend"
-  Team        = "Team4"
-  CostCenter  = "Development"
+  Project    = "JobApp-Backend"
+  Team       = "Team4"
+  Repository = "team4-job-app-backend"
+  CostCenter = "Development"
 }

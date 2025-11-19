@@ -34,3 +34,23 @@ output "team_name" {
   description = "The team name"
   value       = var.team_name
 }
+
+# Pipeline-friendly outputs
+output "naming_prefix" {
+  description = "The naming prefix used for resources"
+  value       = local.naming_prefix
+}
+
+output "deployment_info" {
+  description = "Information about the deployment"
+  value = {
+    environment  = var.environment
+    git_branch   = var.git_branch
+    build_number = var.build_number
+    deployed_at  = timestamp()
+    ci_cd_mode   = var.ci_cd
+  }
+
+  # Note: Set to true in production to avoid logging deployment details
+  sensitive = false
+}

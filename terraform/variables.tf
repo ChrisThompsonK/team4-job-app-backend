@@ -1,15 +1,7 @@
 # Core Variables for Team4 Job App Backend Infrastructure
 
-variable "resource_group_name" {
-  description = "The name of the Azure resource group for backend infrastructure"
-  type        = string
-  default     = "rg-team4-jobapp-backend"
-
-  validation {
-    condition     = can(regex("^[a-zA-Z0-9_-]{1,90}$", var.resource_group_name))
-    error_message = "Resource group name must be 1-90 characters and contain only alphanumeric characters, underscores, and hyphens."
-  }
-}
+# Note: resource_group_name is now dynamically generated in main.tf using locals
+# This supports environment-based naming without hardcoding values
 
 variable "location" {
   description = "The Azure region where resources will be deployed"
@@ -30,6 +22,35 @@ variable "environment" {
   validation {
     condition     = contains(["dev", "test", "prod"], var.environment)
     error_message = "Environment must be one of: dev, test, prod."
+  }
+}
+
+# Pipeline-specific variables
+variable "ci_cd" {
+  description = "Whether this is running in a CI/CD pipeline"
+  type        = bool
+  default     = false
+}
+
+variable "git_branch" {
+  description = "The git branch being deployed (for pipeline context)"
+  type        = string
+  default     = "unknown"
+
+  validation {
+    condition     = length(var.git_branch) > 0
+    error_message = "Git branch cannot be empty."
+  }
+}
+
+variable "build_number" {
+  description = "The build number from the CI/CD pipeline"
+  type        = string
+  default     = "local"
+
+  validation {
+    condition     = length(var.build_number) > 0
+    error_message = "Build number cannot be empty."
   }
 }
 
@@ -61,10 +82,9 @@ variable "common_tags" {
   description = "Common tags to be applied to all resources"
   type        = map(string)
   default = {
-    Environment = "dev"
-    ManagedBy   = "Terraform"
-    Project     = "JobApp-Backend"
-    Team        = "Team4"
+    Project    = "JobApp-Backend"
+    Team       = "Team4"
+    Repository = "team4-job-app-backend"
   }
 }
 
