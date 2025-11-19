@@ -59,20 +59,18 @@ resource "azurerm_container_registry" "acr" {
   sku                 = var.acr_sku
   admin_enabled       = false # Security best practice - use managed identity
 
-  # Enable vulnerability scanning for production
-  dynamic "quarantine_policy" {
-    for_each = var.environment == "prod" ? [1] : []
-    content {
-      status = "enabled"
-    }
+  # Enable quarantine policy for Premium SKU only (for vulnerability scanning)
+  quarantine_policy_enabled = var.acr_sku == "Premium" && var.environment == "prod" ? true : false
+
+  # Enable retention policy for production
+  retention_policy {
+    enabled = var.environment == "prod" ? true : false
+    days    = 30
   }
 
-  # Enable content trust for production
-  dynamic "trust_policy" {
-    for_each = var.environment == "prod" ? [1] : []
-    content {
-      trust_enabled = true
-    }
+  # Trust policy (content trust) for Premium SKU
+  trust_policy {
+    enabled = var.acr_sku == "Premium" && var.environment == "prod" ? true : false
   }
 
   tags = merge(local.common_tags, {
