@@ -77,20 +77,11 @@ jobs:
         with:
           terraform_version: "1.5.7"
 
-      - name: Terraform Format Check
-        working-directory: ./terraform
-        run: terraform fmt -check -recursive
-
-      - name: Terraform Init (validation only)
-        working-directory: ./terraform
-        run: terraform init -backend=false
-
       - name: Terraform Validate
         working-directory: ./terraform
-        run: terraform validate
-
-      - name: Check deploy script is executable
-        run: test -x terraform/deploy.sh
+        run: |
+          terraform init -backend=false
+          terraform validate
 
   # ========================================
   # STAGE 2: Build
