@@ -41,6 +41,43 @@ output "naming_prefix" {
   value       = local.naming_prefix
 }
 
+# Container Registry Outputs
+output "acr_name" {
+  description = "The name of the Azure Container Registry"
+  value       = azurerm_container_registry.acr.name
+}
+
+output "acr_login_server" {
+  description = "The login server URL for the Azure Container Registry"
+  value       = azurerm_container_registry.acr.login_server
+}
+
+output "acr_id" {
+  description = "The resource ID of the Azure Container Registry"
+  value       = azurerm_container_registry.acr.id
+}
+
+# App Service Outputs
+output "app_service_name" {
+  description = "The name of the App Service"
+  value       = azurerm_linux_web_app.backend.name
+}
+
+output "app_service_url" {
+  description = "The URL of the App Service"
+  value       = "https://${azurerm_linux_web_app.backend.default_hostname}"
+}
+
+output "app_service_id" {
+  description = "The resource ID of the App Service"
+  value       = azurerm_linux_web_app.backend.id
+}
+
+output "app_service_principal_id" {
+  description = "The principal ID of the App Service managed identity"
+  value       = azurerm_linux_web_app.backend.identity[0].principal_id
+}
+
 output "deployment_info" {
   description = "Information about the deployment"
   value = {

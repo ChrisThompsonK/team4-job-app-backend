@@ -90,3 +90,52 @@ variable "common_tags" {
 
 # Backend-specific variables
 
+# Azure Container Registry Configuration
+variable "acr_sku" {
+  description = "The SKU for Azure Container Registry"
+  type        = string
+  default     = "Basic"
+
+  validation {
+    condition     = contains(["Basic", "Standard", "Premium"], var.acr_sku)
+    error_message = "ACR SKU must be one of: Basic, Standard, Premium."
+  }
+}
+
+# App Service Configuration
+variable "app_service_sku" {
+  description = "The SKU for App Service Plan"
+  type        = string
+  default     = "B1"
+
+  validation {
+    condition     = can(regex("^[BSFP][1-3]?$|^Y1$", var.app_service_sku))
+    error_message = "App Service SKU must be a valid Azure App Service SKU (e.g., B1, S1, P1v2, etc.)."
+  }
+}
+
+# Container Configuration
+variable "docker_image_name" {
+  description = "The name of the Docker image"
+  type        = string
+  default     = "jobapp-backend"
+
+  validation {
+    condition     = can(regex("^[a-z0-9]+[a-z0-9._-]*[a-z0-9]+$", var.docker_image_name))
+    error_message = "Docker image name must be a valid container image name."
+  }
+}
+
+variable "docker_image_tag" {
+  description = "The tag of the Docker image"
+  type        = string
+  default     = "latest"
+}
+
+# Application Settings
+variable "app_settings" {
+  description = "Application settings for the App Service"
+  type        = map(string)
+  default     = {}
+}
+
