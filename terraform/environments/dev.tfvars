@@ -16,9 +16,9 @@ build_number = "local-dev"
 
 # Development-specific tags
 common_tags = {
-  Project     = "JobApp-Backend"
-  Team        = "Team4"
-  Repository  = "team4-job-app-backend"
-  CostCenter  = "Development"
-  Owner       = "Team4-Dev"
+  Project    = "JobApp-Backend"
+  Team       = "Team4"
+  Repository = "team4-job-app-backend"
+  CostCenter = "Development"
+  Owner      = "Team4-Dev"
 }
