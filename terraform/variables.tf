@@ -17,11 +17,8 @@ variable "location" {
   default     = "UK South"
 
   validation {
-    condition = contains([
-      "UK South", "UK West", "West Europe", "North Europe",
-      "East US", "West US", "Central US"
-    ], var.location)
-    error_message = "Location must be a valid Azure region."
+    condition     = var.location == "UK South"
+    error_message = "Location must be UK South for this project."
   }
 }
 
