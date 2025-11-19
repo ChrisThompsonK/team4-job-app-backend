@@ -72,24 +72,4 @@ variable "common_tags" {
 }
 
 # Backend-specific variables
-variable "app_service_plan_sku" {
-  description = "The SKU for the App Service Plan"
-  type        = string
-  default     = "F1"
 
-  validation {
-    condition     = contains(["F1", "B1", "B2", "B3", "S1", "S2", "S3", "P1", "P2", "P3"], var.app_service_plan_sku)
-    error_message = "App Service Plan SKU must be a valid Azure App Service Plan SKU."
-  }
-}
-
-variable "database_tier" {
-  description = "The performance tier for the database"
-  type        = string
-  default     = "Basic"
-
-  validation {
-    condition     = contains(["Basic", "Standard", "Premium"], var.database_tier)
-    error_message = "Database tier must be one of: Basic, Standard, Premium."
-  }
-}

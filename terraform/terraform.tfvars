@@ -8,12 +8,6 @@ environment         = "dev"
 project_name = "jobapp"
 team_name    = "team4"
 
-# App Service Configuration
-app_service_plan_sku = "F1" # Free tier for development
-
-# Database Configuration
-database_tier = "Basic" # Basic tier for development
-
 # Additional tags (optional)
 common_tags = {
   Environment = "dev"
