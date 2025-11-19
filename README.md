@@ -1,4 +1,5 @@
 [![Code Quality](https://github.com/ChrisThompsonK/team4-job-app-backend/actions/workflows/code-quality.yml/badge.svg)](https://github.com/ChrisThompsonK/team4-job-app-backend/actions/workflows/code-quality.yml)
+[![Terraform CI](https://github.com/ChrisThompsonK/team4-job-app-backend/actions/workflows/terraform-ci.yml/badge.svg)](https://github.com/ChrisThompsonK/team4-job-app-backend/actions/workflows/terraform-ci.yml)
 
 [![Formatted with Biome](https://img.shields.io/badge/Formatted_with-Biome-60a5fa?style=flat&logo=biome)](https://biomejs.dev/)
 
@@ -493,6 +494,51 @@ This backend API serves data to the frontend application located in `team4-job-a
 - ❌ Be unable to submit job applications
 
 **To run both projects together**, see the "Quick Start (Backend + Frontend Together)" section above.
+
+## 🚀 CI/CD Pipeline
+
+This project includes comprehensive CI/CD automation for both application and infrastructure:
+
+### 📊 Automated Checks
+
+**Application CI Pipeline** (`.github/workflows/code-quality.yml`):
+- ✅ **Code Quality**: Biome linting and formatting checks
+- ✅ **Unit Tests**: Vitest test suite execution  
+- ✅ **Build**: TypeScript compilation verification
+- ✅ **Docker**: Container image building and registry push
+- ✅ **Terraform Validation**: Infrastructure code validation
+
+**Terraform Infrastructure Pipeline** (`.github/workflows/terraform-ci.yml`):
+- ✅ **Format Check**: `terraform fmt -check`
+- ✅ **Validation**: `terraform validate`
+- ✅ **Security Scan**: tfsec security analysis
+- ✅ **Plan**: Environment-specific infrastructure planning
+- ✅ **Apply**: Automated deployment to Azure (main branch)
+- ✅ **Destroy**: Manual infrastructure teardown (workflow_dispatch)
+
+### 🌿 Branch Strategy
+
+- **Feature Branches**: Run application tests + Terraform validation
+- **Pull Requests**: Full CI checks + Terraform plan (dev environment)
+- **Main Branch**: Complete CI + Terraform apply (production environment)
+
+### 🎯 Manual Deployments
+
+Trigger manual Terraform operations via GitHub Actions:
+
+1. Go to **Actions** → **Terraform CI/CD**
+2. Click **"Run workflow"**
+3. Select environment (`dev` or `prod`) and action (`plan`, `apply`, `destroy`)
+
+### 📋 Pipeline Status
+
+Check pipeline status via the badges at the top of this README or visit:
+- [Application CI](https://github.com/ChrisThompsonK/team4-job-app-backend/actions/workflows/code-quality.yml)
+- [Terraform CI](https://github.com/ChrisThompsonK/team4-job-app-backend/actions/workflows/terraform-ci.yml)
+
+### 🔧 Local Terraform
+
+For local infrastructure management, see [`terraform/README.md`](./terraform/README.md).
 
 ## Contributing
 

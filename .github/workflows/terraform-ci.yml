@@ -1,346 +1,346 @@
 name: Terraform CI/CD
 
 on:
-  push:
-    branches: [main, develop]
-    paths: ['terraform/**']
-  pull_request:
-    branches: [main]
-    paths: ['terraform/**']
-  workflow_dispatch:
-    inputs:
-      environment:
-        description: 'Environment to deploy'
-        required: true
-        default: 'dev'
-        type: choice
-        options:
-        - dev
-        - prod
-      action:
-        description: 'Terraform action'
-        required: true
-        default: 'plan'
-        type: choice
-        options:
-        - plan
-        - apply
-        - destroy
+    push:
+        branches: [main, develop]
+        paths: ["terraform/**"]
+    pull_request:
+        branches: [main]
+        paths: ["terraform/**"]
+    workflow_dispatch:
+        inputs:
+            environment:
+                description: "Environment to deploy"
+                required: true
+                default: "dev"
+                type: choice
+                options:
+                    - dev
+                    - prod
+            action:
+                description: "Terraform action"
+                required: true
+                default: "plan"
+                type: choice
+                options:
+                    - plan
+                    - apply
+                    - destroy
 
 env:
-  TF_VERSION: "1.5.7"
-  ARM_USE_MSI: false
+    TF_VERSION: "1.5.7"
+    ARM_USE_MSI: false
 
 jobs:
-  # ========================================
-  # STAGE 1: Terraform Validation & Security
-  # ========================================
-  
-  terraform-validate:
-    name: 🔍 Terraform Validate
-    runs-on: ubuntu-latest
-    
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+    # ========================================
+    # STAGE 1: Terraform Validation & Security
+    # ========================================
 
-      - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v3
-        with:
-          terraform_version: ${{ env.TF_VERSION }}
+    terraform-validate:
+        name: 🔍 Terraform Validate
+        runs-on: ubuntu-latest
 
-      - name: Terraform Format Check
-        working-directory: ./terraform
-        run: terraform fmt -check -recursive
+        steps:
+            - name: Checkout code
+              uses: actions/checkout@v4
 
-      - name: Terraform Init (validation only)
-        working-directory: ./terraform
-        run: |
-          # Initialize without backend for validation
-          terraform init -backend=false
+            - name: Setup Terraform
+              uses: hashicorp/setup-terraform@v3
+              with:
+                  terraform_version: ${{ env.TF_VERSION }}
 
-      - name: Terraform Validate
-        working-directory: ./terraform
-        run: terraform validate
+            - name: Terraform Format Check
+              working-directory: ./terraform
+              run: terraform fmt -check -recursive
 
-      - name: Run tfsec security scan
-        uses: aquasecurity/tfsec-action@v1.0.3
-        with:
-          working_directory: terraform
-          soft_fail: true
+            - name: Terraform Init (validation only)
+              working-directory: ./terraform
+              run: |
+                  # Initialize without backend for validation
+                  terraform init -backend=false
 
-  # ========================================
-  # STAGE 2: Terraform Plan
-  # ========================================
-  
-  terraform-plan:
-    name: 📋 Terraform Plan
-    runs-on: ubuntu-latest
-    needs: [terraform-validate]
-    if: github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch' || github.ref != 'refs/heads/main'
-    
-    strategy:
-      matrix:
-        include:
-          - environment: dev
-    
-    steps:
-      - name: Set environment
-        id: env
-        run: |
-          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            echo "environment=${{ inputs.environment }}" >> $GITHUB_OUTPUT
-          elif [ "${{ github.ref }}" = "refs/heads/main" ]; then
-            echo "environment=prod" >> $GITHUB_OUTPUT
-          else
-            echo "environment=dev" >> $GITHUB_OUTPUT
-          fi
+            - name: Terraform Validate
+              working-directory: ./terraform
+              run: terraform validate
 
-      - name: Checkout code
-        uses: actions/checkout@v4
+            - name: Run tfsec security scan
+              uses: aquasecurity/tfsec-action@v1.0.3
+              with:
+                  working_directory: terraform
+                  soft_fail: true
 
-      - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v3
-        with:
-          terraform_version: ${{ env.TF_VERSION }}
+    # ========================================
+    # STAGE 2: Terraform Plan
+    # ========================================
 
-      - name: Azure Login
-        uses: azure/login@v2
-        with:
-          creds: ${{ secrets.AZURE_CREDENTIALS }}
+    terraform-plan:
+        name: 📋 Terraform Plan
+        runs-on: ubuntu-latest
+        needs: [terraform-validate]
+        if: github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch' || github.ref != 'refs/heads/main'
 
-      - name: Set Azure credentials
-        run: |
-          echo "ARM_CLIENT_ID=$(echo '${{ secrets.AZURE_CREDENTIALS }}' | jq -r .clientId)" >> $GITHUB_ENV
-          echo "ARM_CLIENT_SECRET=$(echo '${{ secrets.AZURE_CREDENTIALS }}' | jq -r .clientSecret)" >> $GITHUB_ENV
-          echo "ARM_SUBSCRIPTION_ID=$(echo '${{ secrets.AZURE_CREDENTIALS }}' | jq -r .subscriptionId)" >> $GITHUB_ENV
-          echo "ARM_TENANT_ID=$(echo '${{ secrets.AZURE_CREDENTIALS }}' | jq -r .tenantId)" >> $GITHUB_ENV
+        strategy:
+            matrix:
+                include:
+                    - environment: dev
 
-      - name: Set environment variables
-        run: |
-          echo "TF_VAR_environment=${{ steps.env.outputs.environment }}" >> $GITHUB_ENV
-          echo "TF_VAR_ci_cd=true" >> $GITHUB_ENV
-          echo "TF_VAR_git_branch=${{ github.head_ref || github.ref_name }}" >> $GITHUB_ENV
-          echo "TF_VAR_build_number=${{ github.run_number }}" >> $GITHUB_ENV
+        steps:
+            - name: Set environment
+              id: env
+              run: |
+                  if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+                    echo "environment=${{ inputs.environment }}" >> $GITHUB_OUTPUT
+                  elif [ "${{ github.ref }}" = "refs/heads/main" ]; then
+                    echo "environment=prod" >> $GITHUB_OUTPUT
+                  else
+                    echo "environment=dev" >> $GITHUB_OUTPUT
+                  fi
 
-      - name: Terraform Init
-        working-directory: ./terraform
-        run: |
-          terraform init \
-            -backend-config="key=team4-jobapp-backend-${{ steps.env.outputs.environment }}.tfstate"
+            - name: Checkout code
+              uses: actions/checkout@v4
 
-      - name: Terraform Plan
-        working-directory: ./terraform
-        run: |
-          terraform plan \
-            -var-file="environments/${{ steps.env.outputs.environment }}.tfvars" \
-            -out=tfplan-${{ steps.env.outputs.environment }} \
-            -detailed-exitcode
-        continue-on-error: true
-        id: plan
+            - name: Setup Terraform
+              uses: hashicorp/setup-terraform@v3
+              with:
+                  terraform_version: ${{ env.TF_VERSION }}
 
-      - name: Comment PR with plan
-        if: github.event_name == 'pull_request'
-        uses: actions/github-script@v7
-        with:
-          script: |
-            const fs = require('fs');
-            
-            // Read the plan output (if exists)
-            let planOutput = 'Plan execution failed or no changes detected.';
-            try {
-              // This is a simplified approach - in practice you'd capture the plan output
-              planOutput = `Terraform plan completed for environment: ${{ matrix.environment }}`;
-            } catch (error) {
-              planOutput = 'Could not read plan output.';
-            }
-            
-            const output = `#### Terraform Plan Results 🏗️
-            
-            **Environment:** \`${{ steps.env.outputs.environment }}\`
-            **Branch:** \`${{ github.head_ref }}\`
-            
-            <details><summary>Show Plan Output</summary>
-            
-            \`\`\`hcl
-            ${planOutput}
-            \`\`\`
-            
-            </details>
-            
-            *Pusher: @${{ github.actor }}, Action: \`${{ github.event_name }}\`*`;
-            
-            github.rest.issues.createComment({
-              issue_number: context.issue.number,
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              body: output
-            });
+            - name: Azure Login
+              uses: azure/login@v2
+              with:
+                  creds: ${{ secrets.AZURE_CREDENTIALS }}
 
-      - name: Upload plan artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: tfplan-${{ steps.env.outputs.environment }}-${{ github.run_number }}
-          path: terraform/tfplan-${{ steps.env.outputs.environment }}
-          retention-days: 5
+            - name: Set Azure credentials
+              run: |
+                  echo "ARM_CLIENT_ID=$(echo '${{ secrets.AZURE_CREDENTIALS }}' | jq -r .clientId)" >> $GITHUB_ENV
+                  echo "ARM_CLIENT_SECRET=$(echo '${{ secrets.AZURE_CREDENTIALS }}' | jq -r .clientSecret)" >> $GITHUB_ENV
+                  echo "ARM_SUBSCRIPTION_ID=$(echo '${{ secrets.AZURE_CREDENTIALS }}' | jq -r .subscriptionId)" >> $GITHUB_ENV
+                  echo "ARM_TENANT_ID=$(echo '${{ secrets.AZURE_CREDENTIALS }}' | jq -r .tenantId)" >> $GITHUB_ENV
 
-  # ========================================
-  # STAGE 3: Terraform Apply (Production)
-  # ========================================
-  
-  terraform-apply:
-    name: 🚀 Terraform Apply
-    runs-on: ubuntu-latest
-    needs: [terraform-plan]
-    if: |
-      (github.ref == 'refs/heads/main' && github.event_name == 'push') ||
-      (github.event_name == 'workflow_dispatch' && inputs.action == 'apply')
-    
-    steps:
-      - name: Set environment
-        id: env
-        run: |
-          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            echo "environment=${{ inputs.environment }}" >> $GITHUB_OUTPUT
-          elif [ "${{ github.ref }}" = "refs/heads/main" ]; then
-            echo "environment=prod" >> $GITHUB_OUTPUT
-          else
-            echo "environment=dev" >> $GITHUB_OUTPUT
-          fi
+            - name: Set environment variables
+              run: |
+                  echo "TF_VAR_environment=${{ steps.env.outputs.environment }}" >> $GITHUB_ENV
+                  echo "TF_VAR_ci_cd=true" >> $GITHUB_ENV
+                  echo "TF_VAR_git_branch=${{ github.head_ref || github.ref_name }}" >> $GITHUB_ENV
+                  echo "TF_VAR_build_number=${{ github.run_number }}" >> $GITHUB_ENV
 
-      - name: Checkout code
-        uses: actions/checkout@v4
+            - name: Terraform Init
+              working-directory: ./terraform
+              run: |
+                  terraform init \
+                    -backend-config="key=team4-jobapp-backend-${{ steps.env.outputs.environment }}.tfstate"
 
-      - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v3
-        with:
-          terraform_version: ${{ env.TF_VERSION }}
+            - name: Terraform Plan
+              working-directory: ./terraform
+              run: |
+                  terraform plan \
+                    -var-file="environments/${{ steps.env.outputs.environment }}.tfvars" \
+                    -out=tfplan-${{ steps.env.outputs.environment }} \
+                    -detailed-exitcode
+              continue-on-error: true
+              id: plan
 
-      - name: Azure Login
-        uses: azure/login@v2
-        with:
-          creds: ${{ secrets.AZURE_CREDENTIALS }}
+            - name: Comment PR with plan
+              if: github.event_name == 'pull_request'
+              uses: actions/github-script@v7
+              with:
+                  script: |
+                      const fs = require('fs');
 
-      - name: Set Azure credentials
-        run: |
-          echo "ARM_CLIENT_ID=$(echo '${{ secrets.AZURE_CREDENTIALS }}' | jq -r .clientId)" >> $GITHUB_ENV
-          echo "ARM_CLIENT_SECRET=$(echo '${{ secrets.AZURE_CREDENTIALS }}' | jq -r .clientSecret)" >> $GITHUB_ENV
-          echo "ARM_SUBSCRIPTION_ID=$(echo '${{ secrets.AZURE_CREDENTIALS }}' | jq -r .subscriptionId)" >> $GITHUB_ENV
-          echo "ARM_TENANT_ID=$(echo '${{ secrets.AZURE_CREDENTIALS }}' | jq -r .tenantId)" >> $GITHUB_ENV
+                      // Read the plan output (if exists)
+                      let planOutput = 'Plan execution failed or no changes detected.';
+                      try {
+                        // This is a simplified approach - in practice you'd capture the plan output
+                        planOutput = `Terraform plan completed for environment: ${{ matrix.environment }}`;
+                      } catch (error) {
+                        planOutput = 'Could not read plan output.';
+                      }
 
-      - name: Set environment variables
-        run: |
-          echo "TF_VAR_environment=${{ steps.env.outputs.environment }}" >> $GITHUB_ENV
-          echo "TF_VAR_ci_cd=true" >> $GITHUB_ENV
-          echo "TF_VAR_git_branch=${{ github.ref_name }}" >> $GITHUB_ENV
-          echo "TF_VAR_build_number=${{ github.run_number }}" >> $GITHUB_ENV
+                      const output = `#### Terraform Plan Results 🏗️
 
-      - name: Terraform Init
-        working-directory: ./terraform
-        run: |
-          terraform init \
-            -backend-config="key=team4-jobapp-backend-${{ steps.env.outputs.environment }}.tfstate"
+                      **Environment:** \`${{ steps.env.outputs.environment }}\`
+                      **Branch:** \`${{ github.head_ref }}\`
 
-      - name: Download plan artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: tfplan-${{ steps.env.outputs.environment }}-${{ github.run_number }}
-          path: terraform/
+                      <details><summary>Show Plan Output</summary>
 
-      - name: Terraform Apply
-        working-directory: ./terraform
-        run: |
-          terraform apply \
-            -auto-approve \
-            tfplan-${{ steps.env.outputs.environment }}
+                      \`\`\`hcl
+                      ${planOutput}
+                      \`\`\`
 
-      - name: Terraform Output
-        working-directory: ./terraform
-        id: output
-        run: |
-          terraform output -json > terraform-outputs.json
-          echo "resource_group_name=$(terraform output -raw resource_group_name)" >> $GITHUB_OUTPUT
+                      </details>
 
-      - name: Upload outputs
-        uses: actions/upload-artifact@v4
-        with:
-          name: terraform-outputs-${{ steps.env.outputs.environment }}-${{ github.run_number }}
-          path: terraform/terraform-outputs.json
-          retention-days: 30
+                      *Pusher: @${{ github.actor }}, Action: \`${{ github.event_name }}\`*`;
 
-      - name: Deployment Summary
-        run: |
-          echo "## 🚀 Terraform Deployment Complete!" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "**Environment:** ${{ steps.env.outputs.environment }}" >> $GITHUB_STEP_SUMMARY
-          echo "**Resource Group:** ${{ steps.output.outputs.resource_group_name }}" >> $GITHUB_STEP_SUMMARY
-          echo "**Git Branch:** ${{ github.ref_name }}" >> $GITHUB_STEP_SUMMARY
-          echo "**Build Number:** ${{ github.run_number }}" >> $GITHUB_STEP_SUMMARY
-          echo "**Deployed At:** $(date -u)" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "### 🔗 Quick Links" >> $GITHUB_STEP_SUMMARY
-          echo "- [Azure Portal](https://portal.azure.com)" >> $GITHUB_STEP_SUMMARY
-          echo "- [Terraform State](https://portal.azure.com)" >> $GITHUB_STEP_SUMMARY
+                      github.rest.issues.createComment({
+                        issue_number: context.issue.number,
+                        owner: context.repo.owner,
+                        repo: context.repo.repo,
+                        body: output
+                      });
 
-  # ========================================
-  # STAGE 4: Terraform Destroy (Manual Only)
-  # ========================================
-  
-  terraform-destroy:
-    name: 💥 Terraform Destroy
-    runs-on: ubuntu-latest
-    if: github.event_name == 'workflow_dispatch' && inputs.action == 'destroy'
-    
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+            - name: Upload plan artifact
+              uses: actions/upload-artifact@v4
+              with:
+                  name: tfplan-${{ steps.env.outputs.environment }}-${{ github.run_number }}
+                  path: terraform/tfplan-${{ steps.env.outputs.environment }}
+                  retention-days: 5
 
-      - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v3
-        with:
-          terraform_version: ${{ env.TF_VERSION }}
+    # ========================================
+    # STAGE 3: Terraform Apply (Production)
+    # ========================================
 
-      - name: Azure Login
-        uses: azure/login@v2
-        with:
-          creds: ${{ secrets.AZURE_CREDENTIALS }}
+    terraform-apply:
+        name: 🚀 Terraform Apply
+        runs-on: ubuntu-latest
+        needs: [terraform-plan]
+        if: |
+            (github.ref == 'refs/heads/main' && github.event_name == 'push') ||
+            (github.event_name == 'workflow_dispatch' && inputs.action == 'apply')
 
-      - name: Set Azure credentials
-        run: |
-          echo "ARM_CLIENT_ID=$(echo '${{ secrets.AZURE_CREDENTIALS }}' | jq -r .clientId)" >> $GITHUB_ENV
-          echo "ARM_CLIENT_SECRET=$(echo '${{ secrets.AZURE_CREDENTIALS }}' | jq -r .clientSecret)" >> $GITHUB_ENV
-          echo "ARM_SUBSCRIPTION_ID=$(echo '${{ secrets.AZURE_CREDENTIALS }}' | jq -r .subscriptionId)" >> $GITHUB_ENV
-          echo "ARM_TENANT_ID=$(echo '${{ secrets.AZURE_CREDENTIALS }}' | jq -r .tenantId)" >> $GITHUB_ENV
+        steps:
+            - name: Set environment
+              id: env
+              run: |
+                  if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+                    echo "environment=${{ inputs.environment }}" >> $GITHUB_OUTPUT
+                  elif [ "${{ github.ref }}" = "refs/heads/main" ]; then
+                    echo "environment=prod" >> $GITHUB_OUTPUT
+                  else
+                    echo "environment=dev" >> $GITHUB_OUTPUT
+                  fi
 
-      - name: Set environment variables
-        run: |
-          echo "TF_VAR_environment=${{ inputs.environment }}" >> $GITHUB_ENV
-          echo "TF_VAR_ci_cd=true" >> $GITHUB_ENV
-          echo "TF_VAR_git_branch=${{ github.ref_name }}" >> $GITHUB_ENV
-          echo "TF_VAR_build_number=${{ github.run_number }}" >> $GITHUB_ENV
+            - name: Checkout code
+              uses: actions/checkout@v4
 
-      - name: Terraform Init
-        working-directory: ./terraform
-        run: |
-          terraform init \
-            -backend-config="key=team4-jobapp-backend-${{ inputs.environment }}.tfstate"
+            - name: Setup Terraform
+              uses: hashicorp/setup-terraform@v3
+              with:
+                  terraform_version: ${{ env.TF_VERSION }}
 
-      - name: Terraform Destroy
-        working-directory: ./terraform
-        run: |
-          terraform plan -destroy \
-            -var-file="environments/${{ inputs.environment }}.tfvars" \
-            -out=destroy-plan \
-            -input=false
-          
-          terraform apply \
-            -auto-approve \
-            destroy-plan
+            - name: Azure Login
+              uses: azure/login@v2
+              with:
+                  creds: ${{ secrets.AZURE_CREDENTIALS }}
 
-      - name: Destroy Summary
-        run: |
-          echo "## 💥 Terraform Destroy Complete!" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "**Environment:** ${{ inputs.environment }}" >> $GITHUB_STEP_SUMMARY
-          echo "**Destroyed At:** $(date -u)" >> $GITHUB_STEP_SUMMARY
-          echo "**Triggered By:** @${{ github.actor }}" >> $GITHUB_STEP_SUMMARY
+            - name: Set Azure credentials
+              run: |
+                  echo "ARM_CLIENT_ID=$(echo '${{ secrets.AZURE_CREDENTIALS }}' | jq -r .clientId)" >> $GITHUB_ENV
+                  echo "ARM_CLIENT_SECRET=$(echo '${{ secrets.AZURE_CREDENTIALS }}' | jq -r .clientSecret)" >> $GITHUB_ENV
+                  echo "ARM_SUBSCRIPTION_ID=$(echo '${{ secrets.AZURE_CREDENTIALS }}' | jq -r .subscriptionId)" >> $GITHUB_ENV
+                  echo "ARM_TENANT_ID=$(echo '${{ secrets.AZURE_CREDENTIALS }}' | jq -r .tenantId)" >> $GITHUB_ENV
+
+            - name: Set environment variables
+              run: |
+                  echo "TF_VAR_environment=${{ steps.env.outputs.environment }}" >> $GITHUB_ENV
+                  echo "TF_VAR_ci_cd=true" >> $GITHUB_ENV
+                  echo "TF_VAR_git_branch=${{ github.ref_name }}" >> $GITHUB_ENV
+                  echo "TF_VAR_build_number=${{ github.run_number }}" >> $GITHUB_ENV
+
+            - name: Terraform Init
+              working-directory: ./terraform
+              run: |
+                  terraform init \
+                    -backend-config="key=team4-jobapp-backend-${{ steps.env.outputs.environment }}.tfstate"
+
+            - name: Download plan artifact
+              uses: actions/download-artifact@v4
+              with:
+                  name: tfplan-${{ steps.env.outputs.environment }}-${{ github.run_number }}
+                  path: terraform/
+
+            - name: Terraform Apply
+              working-directory: ./terraform
+              run: |
+                  terraform apply \
+                    -auto-approve \
+                    tfplan-${{ steps.env.outputs.environment }}
+
+            - name: Terraform Output
+              working-directory: ./terraform
+              id: output
+              run: |
+                  terraform output -json > terraform-outputs.json
+                  echo "resource_group_name=$(terraform output -raw resource_group_name)" >> $GITHUB_OUTPUT
+
+            - name: Upload outputs
+              uses: actions/upload-artifact@v4
+              with:
+                  name: terraform-outputs-${{ steps.env.outputs.environment }}-${{ github.run_number }}
+                  path: terraform/terraform-outputs.json
+                  retention-days: 30
+
+            - name: Deployment Summary
+              run: |
+                  echo "## 🚀 Terraform Deployment Complete!" >> $GITHUB_STEP_SUMMARY
+                  echo "" >> $GITHUB_STEP_SUMMARY
+                  echo "**Environment:** ${{ steps.env.outputs.environment }}" >> $GITHUB_STEP_SUMMARY
+                  echo "**Resource Group:** ${{ steps.output.outputs.resource_group_name }}" >> $GITHUB_STEP_SUMMARY
+                  echo "**Git Branch:** ${{ github.ref_name }}" >> $GITHUB_STEP_SUMMARY
+                  echo "**Build Number:** ${{ github.run_number }}" >> $GITHUB_STEP_SUMMARY
+                  echo "**Deployed At:** $(date -u)" >> $GITHUB_STEP_SUMMARY
+                  echo "" >> $GITHUB_STEP_SUMMARY
+                  echo "### 🔗 Quick Links" >> $GITHUB_STEP_SUMMARY
+                  echo "- [Azure Portal](https://portal.azure.com)" >> $GITHUB_STEP_SUMMARY
+                  echo "- [Terraform State](https://portal.azure.com)" >> $GITHUB_STEP_SUMMARY
+
+    # ========================================
+    # STAGE 4: Terraform Destroy (Manual Only)
+    # ========================================
+
+    terraform-destroy:
+        name: 💥 Terraform Destroy
+        runs-on: ubuntu-latest
+        if: github.event_name == 'workflow_dispatch' && inputs.action == 'destroy'
+
+        steps:
+            - name: Checkout code
+              uses: actions/checkout@v4
+
+            - name: Setup Terraform
+              uses: hashicorp/setup-terraform@v3
+              with:
+                  terraform_version: ${{ env.TF_VERSION }}
+
+            - name: Azure Login
+              uses: azure/login@v2
+              with:
+                  creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+            - name: Set Azure credentials
+              run: |
+                  echo "ARM_CLIENT_ID=$(echo '${{ secrets.AZURE_CREDENTIALS }}' | jq -r .clientId)" >> $GITHUB_ENV
+                  echo "ARM_CLIENT_SECRET=$(echo '${{ secrets.AZURE_CREDENTIALS }}' | jq -r .clientSecret)" >> $GITHUB_ENV
+                  echo "ARM_SUBSCRIPTION_ID=$(echo '${{ secrets.AZURE_CREDENTIALS }}' | jq -r .subscriptionId)" >> $GITHUB_ENV
+                  echo "ARM_TENANT_ID=$(echo '${{ secrets.AZURE_CREDENTIALS }}' | jq -r .tenantId)" >> $GITHUB_ENV
+
+            - name: Set environment variables
+              run: |
+                  echo "TF_VAR_environment=${{ inputs.environment }}" >> $GITHUB_ENV
+                  echo "TF_VAR_ci_cd=true" >> $GITHUB_ENV
+                  echo "TF_VAR_git_branch=${{ github.ref_name }}" >> $GITHUB_ENV
+                  echo "TF_VAR_build_number=${{ github.run_number }}" >> $GITHUB_ENV
+
+            - name: Terraform Init
+              working-directory: ./terraform
+              run: |
+                  terraform init \
+                    -backend-config="key=team4-jobapp-backend-${{ inputs.environment }}.tfstate"
+
+            - name: Terraform Destroy
+              working-directory: ./terraform
+              run: |
+                  terraform plan -destroy \
+                    -var-file="environments/${{ inputs.environment }}.tfvars" \
+                    -out=destroy-plan \
+                    -input=false
+
+                  terraform apply \
+                    -auto-approve \
+                    destroy-plan
+
+            - name: Destroy Summary
+              run: |
+                  echo "## 💥 Terraform Destroy Complete!" >> $GITHUB_STEP_SUMMARY
+                  echo "" >> $GITHUB_STEP_SUMMARY
+                  echo "**Environment:** ${{ inputs.environment }}" >> $GITHUB_STEP_SUMMARY
+                  echo "**Destroyed At:** $(date -u)" >> $GITHUB_STEP_SUMMARY
+                  echo "**Triggered By:** @${{ github.actor }}" >> $GITHUB_STEP_SUMMARY
