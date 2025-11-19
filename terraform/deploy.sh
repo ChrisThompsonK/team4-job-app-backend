@@ -60,9 +60,13 @@ terraform init -backend-config="key=$BACKEND_KEY"
 log_info "Validating Terraform configuration"
 terraform validate
 
-# Format check (non-breaking)
+# Format check (blocking in CI/CD)
 if ! terraform fmt -check=true >/dev/null 2>&1; then
     log_warn "Terraform files are not properly formatted. Run 'terraform fmt' to fix."
+    if [[ "$TF_VAR_ci_cd" == "true" ]]; then
+        log_error "Blocking deployment due to formatting errors in CI/CD environment."
+        exit 1
+    fi
 fi
 
 case $ACTION in
