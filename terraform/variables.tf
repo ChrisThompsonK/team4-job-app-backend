@@ -121,7 +121,7 @@ variable "docker_image_name" {
   default     = "jobapp-backend"
 
   validation {
-    condition     = can(regex("^[a-z0-9]+[a-z0-9._-]*[a-z0-9]+$", var.docker_image_name))
+    condition     = can(regex("^[a-z0-9]+([a-z0-9._-]*[a-z0-9]+)?$", var.docker_image_name))
     error_message = "Docker image name must be a valid container image name."
   }
 }
