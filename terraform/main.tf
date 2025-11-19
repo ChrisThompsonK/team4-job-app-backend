@@ -59,11 +59,21 @@ resource "azurerm_container_registry" "acr" {
   sku                 = var.acr_sku
   admin_enabled       = false # Security best practice - use managed identity
 
-  # Enable public network access (can be restricted later)
-  public_network_access_enabled = true
+  # Enable vulnerability scanning for production
+  dynamic "quarantine_policy" {
+    for_each = var.environment == "prod" ? [1] : []
+    content {
+      status = "enabled"
+    }
+  }
 
-  # Enable zone redundancy for Premium SKU
-  zone_redundancy_enabled = var.acr_sku == "Premium" ? true : false
+  # Enable content trust for production
+  dynamic "trust_policy" {
+    for_each = var.environment == "prod" ? [1] : []
+    content {
+      trust_enabled = true
+    }
+  }
 
   tags = merge(local.common_tags, {
     Service = "ContainerRegistry"
