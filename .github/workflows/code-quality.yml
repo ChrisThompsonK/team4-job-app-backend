@@ -2,7 +2,7 @@ name: CI Pipeline
 
 on:
   push:
-    branches: [main, CI_terraform]
+    branches: [main]
   pull_request:
     branches: [main]
 
