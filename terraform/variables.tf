@@ -109,8 +109,8 @@ variable "app_service_sku" {
   default     = "B1"
 
   validation {
-    condition     = can(regex("^[BSFP][1-3]?$|^Y1$", var.app_service_sku))
-    error_message = "App Service SKU must be a valid Azure App Service SKU (e.g., B1, S1, P1v2, etc.)."
+    condition     = can(regex("^(B[1-3]|S[1-3]|F[1-3]|P[1-3](v2|v3)?|Y1)$", var.app_service_sku))
+    error_message = "App Service SKU must be a valid Azure App Service SKU (e.g., B1, S1, P1v2, P2v3, etc.)."
   }
 }
 
