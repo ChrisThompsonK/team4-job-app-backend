@@ -20,6 +20,5 @@ common_tags = {
   ManagedBy   = "Terraform"
   Project     = "JobApp-Backend"
   Team        = "Team4"
-  Owner       = "your-email@example.com"
   CostCenter  = "Development"
 }
