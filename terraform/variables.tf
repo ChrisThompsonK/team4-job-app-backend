@@ -77,7 +77,7 @@ variable "container_registry_name" {
 variable "container_registry_resource_group_name" {
   description = "Resource group name where the Container Registry is located"
   type        = string
-  default     = "team4-backend"
+  default     = "container-registry"
 }
 
 # Common tags to be applied to all resources
