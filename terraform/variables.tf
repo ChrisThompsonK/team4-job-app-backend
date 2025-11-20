@@ -3,7 +3,7 @@
 variable "resource_group_name" {
   description = "The name of the Azure resource group for backend infrastructure"
   type        = string
-  default     = "rg-team4-jobapp-backend"
+  default     = "team4-backend"
 
   validation {
     condition     = can(regex("^[a-zA-Z0-9_-]{1,90}$", var.resource_group_name))
@@ -71,12 +71,13 @@ variable "key_vault_resource_group_name" {
 variable "container_registry_name" {
   description = "Name of the existing Azure Container Registry"
   type        = string
+  default     = "team4-backend"
 }
 
 variable "container_registry_resource_group_name" {
   description = "Resource group name where the Container Registry is located"
   type        = string
-  default     = "team4-rg"
+  default     = "team4-backend"
 }
 
 # Common tags to be applied to all resources
