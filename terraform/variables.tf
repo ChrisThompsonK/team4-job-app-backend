@@ -56,6 +56,29 @@ variable "team_name" {
   }
 }
 
+variable "key_vault_name" {
+  description = "Name of the existing Key Vault for secrets management"
+  type        = string
+  default     = "team4-job-app-key-vault"
+}
+
+variable "key_vault_resource_group_name" {
+  description = "Resource group name where the Key Vault is located"
+  type        = string
+  default     = "team4-rg"
+}
+
+variable "container_registry_name" {
+  description = "Name of the existing Azure Container Registry"
+  type        = string
+}
+
+variable "container_registry_resource_group_name" {
+  description = "Resource group name where the Container Registry is located"
+  type        = string
+  default     = "team4-rg"
+}
+
 # Common tags to be applied to all resources
 variable "common_tags" {
   description = "Common tags to be applied to all resources"
@@ -67,6 +90,3 @@ variable "common_tags" {
     Team        = "Team4"
   }
 }
-
-# Backend-specific variables
-
