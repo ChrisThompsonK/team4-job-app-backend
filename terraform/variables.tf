@@ -114,6 +114,12 @@ variable "app_service_sku" {
   }
 }
 
+variable "app_service_always_on" {
+  description = "Whether the App Service should always be on"
+  type        = bool
+  default     = true
+}
+
 # Container Configuration
 variable "docker_image_name" {
   description = "The name of the Docker image"

@@ -1,5 +1,4 @@
-# Default terraform.tfvars file for Team4 Job App Backend
-# Note: For pipeline deployments, use environment-specific files in environments/ folder
+# Terraform variables file for Team4 Job App Backend
 
 # Core Infrastructure
 location    = "UK South"

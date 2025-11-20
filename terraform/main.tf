@@ -56,22 +56,9 @@ resource "azurerm_container_registry" "acr" {
   name                = "acr${replace(local.naming_prefix, "-", "")}${var.environment}"
   resource_group_name = azurerm_resource_group.backend.name
   location            = azurerm_resource_group.backend.location
-  sku                 = var.acr_sku
-  admin_enabled       = false # Security best practice - use managed identity
 
-  # Enable quarantine policy for Premium SKU only (for vulnerability scanning)
-  quarantine_policy_enabled = var.acr_sku == "Premium" && var.environment == "prod" ? true : false
-
-  # Enable retention policy for production
-  retention_policy {
-    enabled = var.environment == "prod" ? true : false
-    days    = 30
-  }
-
-  # Trust policy (content trust) for Premium SKU
-  trust_policy {
-    enabled = var.acr_sku == "Premium" && var.environment == "prod" ? true : false
-  }
+  sku           = var.acr_sku
+  admin_enabled = true
 
   tags = merge(local.common_tags, {
     Service = "ContainerRegistry"
@@ -92,48 +79,35 @@ resource "azurerm_service_plan" "backend" {
   })
 }
 
-# App Service for the backend API
+# Linux Web App for the backend API
 resource "azurerm_linux_web_app" "backend" {
   name                = "app-${local.naming_prefix}-backend-${var.environment}"
   resource_group_name = azurerm_resource_group.backend.name
-  location            = azurerm_service_plan.backend.location
+  location            = azurerm_resource_group.backend.location
   service_plan_id     = azurerm_service_plan.backend.id
 
   site_config {
-    always_on = var.environment == "prod" ? true : false
+    always_on = var.app_service_always_on
 
     application_stack {
-      docker_image     = "${azurerm_container_registry.acr.login_server}/${var.docker_image_name}"
-      docker_image_tag = var.docker_image_tag
+      docker_image_name   = "${azurerm_container_registry.acr.login_server}/job-app-backend:latest"
+      docker_registry_url = "https://${azurerm_container_registry.acr.login_server}"
     }
   }
 
-  # Application settings
-  app_settings = merge(var.app_settings, {
-    "WEBSITES_ENABLE_APP_SERVICE_STORAGE" = "false"
-    "DOCKER_REGISTRY_SERVER_URL"          = "https://${azurerm_container_registry.acr.login_server}"
-    "DOCKER_ENABLE_CI"                    = "true"
-    "NODE_ENV"                            = var.environment == "prod" ? "production" : "development"
-    "PORT"                                = "3001"
-  })
+  app_settings = {
+    "DOCKER_REGISTRY_SERVER_URL"      = "https://${azurerm_container_registry.acr.login_server}"
+    "DOCKER_REGISTRY_SERVER_USERNAME" = azurerm_container_registry.acr.admin_username
+    "DOCKER_REGISTRY_SERVER_PASSWORD" = azurerm_container_registry.acr.admin_password
+    "WEBSITES_PORT"                   = "3000"
+    "NODE_ENV"                        = var.environment
+  }
 
-  # Configure managed identity for ACR access
   identity {
     type = "SystemAssigned"
   }
 
   tags = merge(local.common_tags, {
-    Service = "WebApp"
+    Service = "AppService"
   })
-
-  depends_on = [azurerm_container_registry.acr]
-}
-
-# Role assignment for App Service to pull from ACR
-resource "azurerm_role_assignment" "app_service_acr_pull" {
-  scope                = azurerm_container_registry.acr.id
-  role_definition_name = "AcrPull"
-  principal_id         = azurerm_linux_web_app.backend.identity[0].principal_id
-
-  depends_on = [azurerm_linux_web_app.backend]
 }
