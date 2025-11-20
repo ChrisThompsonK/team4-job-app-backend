@@ -1,3 +1,11 @@
+resource "azurerm_container_app_environment" "backend" {
+  name                = "cae-team4-backend-${var.environment}"
+  location            = azurerm_resource_group.backend.location
+  resource_group_name = "team4-backend"
+
+  tags = var.common_tags
+}
+
 resource "azurerm_container_app" "backend" {
   name                         = "ca-team4-backend-${var.environment}"
   container_app_environment_id = azurerm_container_app_environment.backend.id
