@@ -71,7 +71,7 @@ variable "key_vault_resource_group_name" {
 variable "container_registry_name" {
   description = "Name of the existing Azure Container Registry"
   type        = string
-  default     = "team4-backend"
+  default     = "aiacademy25"
 }
 
 variable "container_registry_resource_group_name" {
