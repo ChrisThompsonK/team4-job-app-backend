@@ -4,8 +4,8 @@
 
 resource "azurerm_user_assigned_identity" "job_app_backend" {
   name                = "team4-job-app-backend-identity"
-  resource_group_name = azurerm_resource_group.main.name
-  location            = azurerm_resource_group.main.location
+  resource_group_name = azurerm_resource_group.backend.name
+  location            = azurerm_resource_group.backend.location
 }
 
 # Output the managed identity details for reference
