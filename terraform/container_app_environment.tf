@@ -1,18 +1,3 @@
-resource "azurerm_container_app_environment" "backend" {
-  name                       = "cae-team4-backend-${var.environment}"
-  location                   = azurerm_resource_group.backend.location
-  resource_group_name        = "team4-backend"
-  log_analytics_workspace_id = azurerm_log_analytics_workspace.backend.id
-}
-
-resource "azurerm_log_analytics_workspace" "backend" {
-  name                = "law-team4-backend-${var.environment}"
-  location            = azurerm_resource_group.backend.location
-  resource_group_name = "team4-backend"
-  sku                 = "PerGB2018"
-  retention_in_days   = 30
-}
-
 resource "azurerm_container_app" "backend" {
   name                         = "ca-team4-backend-${var.environment}"
   container_app_environment_id = azurerm_container_app_environment.backend.id
@@ -32,7 +17,7 @@ resource "azurerm_container_app" "backend" {
   template {
     container {
       name   = "backend"
-      image  = "${data.azurerm_container_registry.acr.login_server}/job-app-backend:latest"
+      image  = "${data.azurerm_container_registry.acr.login_server}/team4-backend:latest"
       cpu    = "0.5"
       memory = "1Gi"
 
