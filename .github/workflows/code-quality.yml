@@ -108,7 +108,7 @@ jobs:
         with:
           context: .
           push: false
-          tags: team4-job-app-frontend:ci-test
+          tags: team4-job-app-backend:ci-test
           cache-from: type=gha
           cache-to: type=gha,mode=max
           load: true
@@ -118,7 +118,7 @@ jobs:
           SESSION_SECRET: ${{ secrets.SESSION_SECRET }}
         run: |
           # Start container (CI environment auto-detected via GitHub Actions)
-          CONTAINER_ID=$(docker run -d --name test-container -p 3000:3000 \
+          CONTAINER_ID=$(docker run -d --name test-container -p 3001:3001 \
             -e CI=true \
             -e NODE_ENV=test \
             -e SESSION_SECRET="${SESSION_SECRET}" \
@@ -147,7 +147,7 @@ jobs:
           MAX_RETRIES=30
           RETRY_DELAY=2
           for i in $(seq 1 $MAX_RETRIES); do
-            if curl -f -s http://localhost:3000/ > /dev/null 2>&1; then
+            if curl -f -s http://localhost:3001/ > /dev/null 2>&1; then
               echo "✅ Application is responding on attempt $i"
               break
             fi
@@ -167,7 +167,7 @@ jobs:
 
           # Final verification
           echo "🧪 Final application check..."
-          HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:3000/)
+          HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:3001/)
           echo "Application HTTP status: $HTTP_STATUS"
 
           echo "✅ Docker container test passed!"
@@ -209,16 +209,16 @@ jobs:
 
       - name: Terraform Init
         run: terraform init
-        working-directory: ./infrastructure
+        working-directory: ./terraform
 
       - name: Terraform Plan
         run: terraform plan -var-file="dev/terraform.tfvars" -out=tfplan
-        working-directory: ./infrastructure
+        working-directory: ./terraform
 
       - name: Terraform Apply
         if: github.ref == 'refs/heads/main' && github.event_name == 'push'
         run: terraform apply -auto-approve tfplan
-        working-directory: ./infrastructure
+        working-directory: ./terraform
 
   # ========================================
   # STAGE 5: ACR login and Push
