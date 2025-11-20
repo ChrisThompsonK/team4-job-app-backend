@@ -8,6 +8,10 @@ environment         = "dev"
 project_name = "jobapp"
 team_name    = "team4"
 
+# Container Registry (alphanumeric only, no hyphens)
+container_registry_name                = "aiacademy25"
+container_registry_resource_group_name = "team4-backend"
+
 # Additional tags (optional)
 common_tags = {
   Environment = "dev"
