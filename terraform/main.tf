@@ -16,11 +16,10 @@ resource "azurerm_resource_group" "backend" {
   name     = var.resource_group_name
   location = var.location
 
-  tags = {
-    Environment = var.environment
-    ManagedBy   = "Terraform"
-    Project     = "JobApp-Backend"
-    Team        = "Team4"
-    Purpose     = "Backend-Infrastructure"
-  }
+  tags = merge(
+    var.common_tags,
+    {
+      Purpose = "Backend-Infrastructure"
+    }
+  )
 }
