@@ -87,12 +87,12 @@ jobs:
         run: npm run build
 
   # ========================================
-  # STAGE 3: Container Build
+  # STAGE 3: Build and push Docker image
   # Only runs if build succeeds
   # ========================================
 
-  build-container:
-    name: 🐳 Build Docker Image
+  docker-build:
+    name: 🐳 Build Docker image
     runs-on: ubuntu-latest
     needs: [build-application]
 
@@ -103,62 +103,156 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Extract metadata
-        id: meta
-        run: |
-          echo "sha_short=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
-          if [ "${{ github.event_name }}" = "push" ] && [ "${{ github.ref }}" = "refs/heads/main" ]; then
-            echo "is_main_push=true" >> $GITHUB_OUTPUT
-          else
-            echo "is_main_push=false" >> $GITHUB_OUTPUT
-          fi
-
-      - name: Login to Azure
-        if: steps.meta.outputs.is_main_push == 'true'
-        uses: azure/login@v2
-        with:
-          creds: ${{ secrets.AZURE_CREDENTIALS }}
-
-      - name: Login to Azure Container Registry
-        if: steps.meta.outputs.is_main_push == 'true'
-        run: az acr login --name ${{ env.REGISTRY_NAME }}
-
-      - name: Build Docker image
+      - name: Build Docker image (PR)
         uses: docker/build-push-action@v5
         with:
           context: .
           push: false
-          tags: ${{ env.IMAGE_NAME }}:${{ steps.meta.outputs.sha_short }}
+          tags: team4-job-app-backend:ci-test
           cache-from: type=gha
           cache-to: type=gha,mode=max
           load: true
 
       - name: Test Docker image
+        env:
+          SESSION_SECRET: ${{ secrets.SESSION_SECRET }}
         run: |
-          echo "✅ Testing if the image was built successfully..."
-          docker images | grep ${{ env.IMAGE_NAME }}
-          echo ""
-          if [ "${{ steps.meta.outputs.is_main_push }}" = "true" ]; then
-            echo "📦 Image built for ACR with tags:"
-            echo "  - ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest"
-            echo "  - ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.meta.outputs.sha_short }}"
-          else
-            echo "📦 Image built locally with tag:"
-            echo "  - ${{ env.IMAGE_NAME }}:${{ steps.meta.outputs.sha_short }}"
+          # Start container (CI environment auto-detected via GitHub Actions)
+          CONTAINER_ID=$(docker run -d --name test-container -p 3001:3001 \
+            -e CI=true \
+            -e NODE_ENV=test \
+            -e SESSION_SECRET="${SESSION_SECRET}" \
+            -e API_BASE_URL=http://localhost:3001 \
+            -e CV_UPLOAD_DIR=/app/uploads/cvs \
+            team4-job-app-backend:ci-test)
+
+          echo "Container started with ID: $CONTAINER_ID"
+
+          # Give the container a moment to initialize
+          echo "Waiting for container to initialize..."
+          sleep 5
+
+          # Check if container is still running
+          if ! docker ps | grep test-container; then
+            echo "❌ Container failed to start or exited immediately. Logs:"
+            docker logs test-container
+            exit 1
           fi
 
-      - name: Push Docker image to ACR
-        if: steps.meta.outputs.is_main_push == 'true'
-        run: |
-          docker tag ${{ env.IMAGE_NAME }}:${{ steps.meta.outputs.sha_short }} ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
-          docker tag ${{ env.IMAGE_NAME }}:${{ steps.meta.outputs.sha_short }} ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.meta.outputs.sha_short }}
-          docker push ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
-          docker push ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.meta.outputs.sha_short }}
+          # Show initial logs
+          echo "📋 Container logs (initial):"
+          docker logs test-container
 
-      - name: Verify ACR image push
-        if: steps.meta.outputs.is_main_push == 'true'
+          # Wait for container to be ready by polling the homepage
+          echo "🔍 Waiting for application to respond..."
+          MAX_RETRIES=30
+          RETRY_DELAY=2
+          for i in $(seq 1 $MAX_RETRIES); do
+            if curl -f -s http://localhost:3001/ > /dev/null 2>&1; then
+              echo "✅ Application is responding on attempt $i"
+              break
+            fi
+            
+            if [ $i -eq $MAX_RETRIES ]; then
+              echo "❌ Application failed to respond after $MAX_RETRIES attempts"
+              echo "📋 Final container logs:"
+              docker logs test-container
+              docker stop test-container
+              docker rm test-container
+              exit 1
+            fi
+            
+            echo "⏳ Attempt $i/$MAX_RETRIES failed, retrying in ${RETRY_DELAY}s..."
+            sleep $RETRY_DELAY
+          done
+
+          # Final verification
+          echo "🧪 Final application check..."
+          HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:3001/)
+          echo "Application HTTP status: $HTTP_STATUS"
+
+          echo "✅ Docker container test passed!"
+
+          # Stop and remove container
+          docker stop test-container
+          docker rm test-container
+
+  # ========================================
+  # STAGE 4: Terraform
+  # Only runs if Docker build succeeds
+  # ========================================
+
+  terraform:
+    name: 🏛️ Terraform
+    runs-on: ubuntu-latest
+    needs: [docker-build]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "~> 1.9"
+
+      - name: Set Azure credentials as environment variables
         run: |
-          echo "✅ Docker image successfully pushed to Azure Container Registry!"
-          echo "Registry: ${{ env.REGISTRY }}"
-          echo "Image: ${{ env.IMAGE_NAME }}"
-          echo "Commit SHA: ${{ steps.meta.outputs.sha_short }}"
+          echo "Setting ARM_* env vars for Terraform..."
+          echo "::add-mask::$(jq -r .clientId <<< '${{ secrets.AZURE_CREDENTIALS }}')"
+          echo "ARM_CLIENT_ID=$(jq -r .clientId <<< '${{ secrets.AZURE_CREDENTIALS }}')" >> $GITHUB_ENV
+          echo "::add-mask::$(jq -r .clientSecret <<< '${{ secrets.AZURE_CREDENTIALS }}')"
+          echo "ARM_CLIENT_SECRET=$(jq -r .clientSecret <<< '${{ secrets.AZURE_CREDENTIALS }}')" >> $GITHUB_ENV
+          echo "::add-mask::$(jq -r .subscriptionId <<< '${{ secrets.AZURE_CREDENTIALS }}')"
+          echo "ARM_SUBSCRIPTION_ID=$(jq -r .subscriptionId <<< '${{ secrets.AZURE_CREDENTIALS }}')" >> $GITHUB_ENV
+          echo "::add-mask::$(jq -r .tenantId <<< '${{ secrets.AZURE_CREDENTIALS }}')"
+          echo "ARM_TENANT_ID=$(jq -r .tenantId <<< '${{ secrets.AZURE_CREDENTIALS }}')" >> $GITHUB_ENV
+
+      - name: Terraform Init
+        run: terraform init
+        working-directory: ./terraform
+
+      - name: Terraform Plan
+        run: terraform plan -var-file="terraform.tfvars" -out=tfplan
+        working-directory: ./terraform
+
+      - name: Terraform Apply
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        run: terraform apply -auto-approve tfplan
+        working-directory: ./terraform
+
+  # ========================================
+  # STAGE 5: ACR login and Push
+  # Only runs if merged to main
+  # ========================================
+
+  ACR-push:
+    name: Push to ACR
+    runs-on: ubuntu-latest
+    needs: [terraform]
+
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Azure Login
+        uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Login to ACR
+        run: az acr login --name ${{ env.REGISTRY_NAME }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Push to ACR
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
