@@ -41,6 +41,26 @@ resource "azurerm_container_app" "backend" {
         name  = "DATABASE_URL"
         value = "file:/app/data/database.sqlite"
       }
+
+      env{
+        name = "CV_UPLOAD_DIR"
+        value = "./uploads/cvs"
+      }
+
+      env{
+        name = "MAX_CV_FILE_SIZE"
+        value = 10485760
+      }
+
+      env{
+        name = "ALLOWED_CV_EXTENSIONS"
+        value = "doc,docx,pdf"
+      }
+
+      env{
+        name = "ALLOWED_CV_MIME_TYPES"
+        value = "application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/msword,application/pdf"
+      }
     }
   }
 
