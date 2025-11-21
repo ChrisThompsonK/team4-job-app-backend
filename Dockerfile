@@ -15,6 +15,9 @@ COPY . .
 # Build the application
 RUN npm run build
 
+# Migrate and seed the database
+RUN npm run db:migrate && npm run db:seed
+
 # Production stage
 FROM node:20-alpine
 

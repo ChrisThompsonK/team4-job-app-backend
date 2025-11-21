@@ -23,7 +23,7 @@ resource "azurerm_container_app" "backend" {
   template {
     container {
       name   = "backend"
-      image  = "${data.azurerm_container_registry.acr.login_server}/team4-job-app-backend:6ac9ed2"
+      image  = "${data.azurerm_container_registry.acr.login_server}/team4-job-app-backend:latest"
       cpu    = "0.5"
       memory = "1Gi"
 
