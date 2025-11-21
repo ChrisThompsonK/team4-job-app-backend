@@ -77,7 +77,7 @@ resource "azurerm_container_app" "backend" {
 
   ingress {
     allow_insecure_connections = false
-    external_enabled           = true
+    external_enabled           = false
     target_port                = 3001
     transport                  = "auto"
 
