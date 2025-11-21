@@ -20,6 +20,12 @@ resource "azurerm_container_app" "backend" {
     identity = azurerm_user_assigned_identity.job_app_backend.id
   }
 
+  secret {
+    name                = "session-secret"
+    key_vault_secret_id = "${data.azurerm_key_vault.job_app_kv.vault_uri}secrets/SESSIONSECRET"
+    identity            = azurerm_user_assigned_identity.job_app_backend.id
+  }
+
   template {
     container {
       name   = "backend"
@@ -61,12 +67,17 @@ resource "azurerm_container_app" "backend" {
         name = "ALLOWED_CV_MIME_TYPES"
         value = "application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/msword,application/pdf"
       }
+
+      env {
+        name        = "SESSION_SECRET"
+        secret_name = "session-secret"
+      }
     }
   }
 
   ingress {
     allow_insecure_connections = false
-    external_enabled           = false
+    external_enabled           = true
     target_port                = 3001
     transport                  = "auto"
 
