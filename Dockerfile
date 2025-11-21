@@ -27,13 +27,16 @@ RUN addgroup -g 1001 -S nodejs && \
 # Copy package files
 COPY package*.json ./
 
-# Install production dependencies only
-RUN npm ci --omit=dev
+# Install all dependencies (including dev for migrations)
+RUN npm ci
 
 # Copy built application from builder
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/drizzle ./drizzle
 COPY --from=builder /app/drizzle.config.ts ./drizzle.config.ts
+
+# Create data directory for database
+RUN mkdir -p /app/data && chown -R nodejs:nodejs /app/data
 
 # Change ownership of app directory to non-root user
 RUN chown -R nodejs:nodejs /app
@@ -47,5 +50,5 @@ USER nodejs
 # Expose port
 EXPOSE $PORT
 
-# Start the application
-CMD ["npm", "start"]
+# Run migrations and seed, then start the application
+CMD ["sh", "-c", "npm run db:migrate && node dist/db/seed.js && npm start"]
